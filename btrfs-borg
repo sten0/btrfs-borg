@@ -1,0 +1,99 @@
+#!/bin/bash
+#
+# btrfs-borg makes snapshots and backs up a list of btrfs snapshotted subvolumes
+# using Borg.  It supports a list of other (probably) non-btrfs directory
+# sources, and 1 second granularity of backups.
+#
+# Copyright (C) 2016  Nicholas D Steeves <nsteeves@gmail.com>
+# Distributed under the terms of the GPLv2 license.
+# 
+
+ROOT='/btrfs-admin' # for btrfs on /, set this to /
+SNAPS='/btrfs-admin/snapshots'
+SUBS='home var'     # if everything is in one subvolume, set this to /
+REPO='/media/usb/Cuboid_Borg'
+COMP='lz4'          # see borg(1) section on -C COMPRESSION
+OTHERS='/etc'       # I don't use btrfs on /; good backups need both /var & /etc
+
+HOURLY=25
+DAILY=8
+WEEKLY=5
+MONTHLY=13
+YEARLY=4
+
+# On my system, this is a subvolume that won't be backed up;
+# however, I'd like to keep a list of its contents
+# echo "Building manifests"
+# cd /usr/src && find > /home/backups/src.manifest
+
+# Seconds since epoch will allow you to make backups just about
+# as often as possible, unless you theoretically have a *really*
+# fast system and *really* fast disks, and no changed files
+DATE=`date +%s`
+
+# Sanity checks
+if [ "`id -u`" -ne 0 ]; then
+    echo "$0 must be run as root.  Exiting."
+    exit 1
+fi
+if [ -d $SNAPS ]; then
+    cd $SNAPS
+    for i in $SUBS; do
+        if [ -d $i ]; then
+            echo "Moving existing $i out of the way to $i-old-$DATE"
+            mv $i $i-old-$DATE
+        fi
+        sync
+        btrfs sub sync $ROOT
+        sync
+    done
+else
+    echo "$SNAPS not found! $0 cannot continue."
+fi
+if [ -e $REPO/config ]; then
+    echo "Configuration found for $REPO"
+else
+    echo "$REPO/config not found!"
+    echo "Is your target disk plugged in and mounted?"
+    echo "Did you initialize the borg repository?"
+    exit 1
+fi
+
+
+# Prepare
+echo "Preparing..."
+sync
+btrfs sub sync $ROOT
+sync
+for i in $SUBS; do
+    btrfs sub snap -r $ROOT/$i $SNAPS/$i
+    sync
+    btrfs sub sync $SNAPS/$i
+    sync
+done
+DIRS=""
+for i in $OTHERS; do
+    DIRS="$DIRS `basename $i`"
+done
+LOTHS=`echo $DIRS | tr ' ' '_'`
+LSUBS=`echo $SUBS | tr ' ' '_'`
+
+
+# Do backup
+echo "Doing backup"
+cd $SNAPS
+borg create -v -v -v --stats -p -C $COMP $REPO::$LOTHS\_$LSUBS@$DATE\_$COMP $SUBS $OTHERS
+
+
+# Cleanup
+echo "Cleaning up Snapshots"
+for i in $SUBS; do
+    cd $SNAPS
+    btrfs sub del $SNAPS/$i
+done
+echo "Syncing...please be patient, this could be slow"
+sync
+btrfs sub sync $ROOT
+sync
+
+borg prune -v -v -v --stats -H $HOURLY -d $DAILY -w $WEEKLY -m $MONTHLY -y $YEARLY $REPO
