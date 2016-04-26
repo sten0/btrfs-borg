@@ -1,0 +1,4 @@
+* Add SSH support (requires borgbackup on server)
+* Add local backup disk mount/umount support
+    - Is udisk really the best way to safely,
+      logically disconnect USB disks?
