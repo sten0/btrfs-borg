@@ -4,8 +4,16 @@
 # Borg.  It supports a list of other (probably) non-btrfs directory sources,
 # and 1 second granularity of backups.
 #
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public
+# License v2 as published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
 # Copyright (C) 2016  Nicholas D Steeves <nsteeves@gmail.com>
-# Distributed under the terms of the GPLv2 license.
 # 
 
 ROOT='/btrfs-admin' # Mountpoint for the whole volume
