@@ -145,7 +145,7 @@ time -o $REPO/time_stats_$DATE (
     echo "Syncing...please be patient, this could be slow"
     sync
     btrfs sub sync $ROOT
-    sync)
+    sync )
 echo "Cleanup took"
 cat $REPO/time_stats_$DATE
 
