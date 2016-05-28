@@ -136,6 +136,7 @@ cd $ROOT/$SNAPS
 	  $SUBS $OTHERS 2>&3) 3>&2 2> $REPO/time_stats_$DATE
 echo "Backup took"
 cat $REPO/time_stats_$DATE
+echo
 
 # Cleanup
 echo "Cleaning up Snapshots"
@@ -149,6 +150,7 @@ echo "Cleaning up Snapshots"
  2>&3) 3>&2 2> $REPO/time_stats_$DATE
 echo "Cleanup took"
 cat $REPO/time_stats_$DATE
+echo
 
 PRUNE=""
 if [ "$HOURLY" ]; then PRUNE="-H $HOURLY"; fi
@@ -161,4 +163,5 @@ echo "Initiating pruning.  Please do not be alarmed if this takes forever"
 	3>&2 2> $REPO/time_stats_$DATE
 echo "Pruning took"
 cat $REPO/time_stats_$DATE
+echo
 rm $REPO/time_stats_$DATE
