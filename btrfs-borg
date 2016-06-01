@@ -38,7 +38,9 @@ COMP='lz4'          # see borg(1) section on -C COMPRESSION
 # If you don't use btrfs on /; useful backups need both /var & /etc
 # Please note that databases in /var won't be consistent unless you freeze
 # or snapshot them somehow
-OTHERS=''           # eg: /etc, /usr/local  
+OTHERS=''           # If your /boot is on a separate partition, /boot needs to
+                    # be in the list of $OTHERS, or your backup won't be able
+                    # to restore a bootable system!
 
                     # Comment out any of the following time periods to disable
 #HOURLY=24          # Disable hourly, because I backup once or twice a week
