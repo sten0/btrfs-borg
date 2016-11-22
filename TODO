@@ -1,4 +1,56 @@
 * Add SSH support (requires borgbackup on server)
+    - Write HOWTO for server-initiated backup
+	    > limit available commands for root on $HOST to btrfs-borg
+          + Would it be better to configure passwordless sudo
+		    for the btrfs-borg command for $HOST's btrfs-borg user?
+        > create btrfs-borg user on $SERVER with mount permissions
+		> limit btrfs-borg commands to borg-server
+        > link to passwordless ssh and borg key-creation HOWTOs
+        = $SERVER sshes into $HOST, runs btrfs-borg,
+		  and this runs backup and sshes into $SERVER
 * Add local backup disk mount/umount support
     - Is udisk really the best way to safely,
       logically disconnect USB disks?
+	- allow borg-btrfs to manage mount/umount via udisk by defining mount point
+        !! Leaving it blank means borg-btrfs will not manage the mount !!
+		!! MUST correspond to a fstab entry with adequate permissions !!
+	- udisk encrypted device support?
+	- get $DEVICE: df -h /home/media/usb/DigitalMercury_Borg | tail -n1 | \
+	      awk '{print $1}' \
+	      || mount HOW_DO_I_FIND_THE_DEVICE/DIR_TO_MOUNT_IF_IT'S_NOT_MOUNTED?
+    - sync; sleep 1; sync; udisksctl unmount -b $DEVICE
+	- sync; sleep 1; sync; udisksctl power-off  -b /dev/sdd1
+* When btrfs-borg is feature-complete, tag 1.0
+* Optional generation of comprehensive manifest.  eg:
+    for i in `borg list $BORG_REPO | awk '{print $1}'`; do
+	  borg info $BORG_REPO::$i >> $BORG_REPO/$REPO/btrfs-borg/borg_info_output
+	done
+    - Alternatively, submit a bug for this functionality upstream ;-)
+* Shift lots of configuration into new btrfs-borg.csv; adapt the script to read
+  from this file; allow the location of this config file to be defined
+    - Include example btrfs-borg.csv
+	- tail -n +2 ~/btrfs-borg.csv
+	- while IFS=, read X Y Z rest; do echo "X is $X" "Y is $Y" "Z is $Z";done < ~/btrfs-borg.csv
+	   !! PROBLEM !! -> need to somehow strip row 1, eg: ROOT,SNAPS,SUBS,CONTAINERS
+	- easiest thing to do is tail -n +2 $CSV-CONFIG > $REPO/btrfs-borg/config.csv.tmp
+	  then < REPO/btrfs-borg/config.csv.tmp
+	   !! Don't forget to remove config.csv.tmp in the cleanup !!
+* Install -d -m 500 $0 $REPO/btrfs-borg/$0
+* Install -d -m 400 $BTRFS-BORG.CSV $REPO/btrfs-borg/$BTRFS-BORG.CSV
+* Chown 700 $REPO/btrfs-borg
+* For each $ROOT, btrfs sub-list $ROOT > $REPO/btrfs-borg/subvolumes_of_$ROOT
+* cat /etc/mtab | grep -v 'autofs\|devpts\|sysfs\|tmpfs\|proc\|fuse\|hugetlbfs\|debugfs\|cgroup\|pstore\|mqueue\|efivarfs\|overlay\|securityfs' > REPO/btrfs-borg/mtab
+* Change "requires root" to checks for UID 0 and outputs warning
+    - eg: echo Warning, normal user detected!
+	           Allowing normal users to create subvolumes is a Denial of Service
+               attack vector, because if too more than 300 subvolumes are created
+			   btrfs can crash and/or IOPS will be critically reduced.  Proceed?
+	      read y|n in a loop
+* Work for README
+    - Shift many long inline comments into README.md
+	- Break things into sections (eg: Introduction, Recommendations, Configuration)
+	- Section on backing up LX Containers: a) unpriviledged containers are assumed
+	  to not be on their own subvolumes, therefore they are assumed to be included
+	  in a snapshot of a subvolume such as @home.  b) 
+* Merge LXC support from my personal copy; modify it by adding grep -i lxc after
+  btrfs sub list
