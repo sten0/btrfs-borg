@@ -36,8 +36,10 @@ CONTAINERS='my-LXC-container my-other-LXC-container'
     # the same format you would pass to lxc-stop -n $CONTAINER-NAME.
     # Please insure that they can be safely stopped without data loss,
     # because at this point in time (2016-11-12) LXC 2.x containers
-    # need to be stopped before they can be snapshotted.
-    # Leave empty to skip LXC container backup.
+    # need to be stopped before they can be snapshotted.  Leave empty
+    # to skip LXC container backup.  If you leave it empty and your
+    # LXC containers are somewhere inside one of the $SUBS then the
+    # containers will be backed up without stopping them.
 
 REPO='/media/usb/Cuboid_Borg'
 #REMUSER='borg'     # TODO: enable ssh+borg remote
