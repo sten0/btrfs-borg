@@ -75,7 +75,7 @@ echo "Manifests have not been configured, please edit $0"
 
 # Uncomment this to exclude from the backup directories that
 # contain a file named CACHEDIR.TAG; these can be created like this:
-# touch /home/.cache/CACHETDIR.TAG
+# touch /home/*/.cache/CACHEDIR.TAG
 
 # EXTRAARGS='--exclude-caches'
 
