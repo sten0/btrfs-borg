@@ -40,12 +40,6 @@
           $REPO/btrfs-borg/config.csv.tmp
       then < REPO/btrfs-borg/config.csv.tmp
        !! Don't forget to remove config.csv.tmp in the cleanup !!
-* Change "requires root" to checks for UID 0 and outputs warning
-    - eg: echo Warning, normal user detected!
-          Allowing normal users to create subvolumes is a Denial of Service
-          attack vector, because if too more than 300 subvolumes are created
-          btrfs can crash and/or IOPS can be critically reduced.  Proceed?
-          read y|n in a loop
 * Work for README
     - Shift many long inline comments into README.md
     - Break things into sections (eg: Introduction, Recommendations,

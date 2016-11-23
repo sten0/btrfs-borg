@@ -89,8 +89,30 @@ DATE=`date +%s`
 
 # Sanity checks
 if [ "`id -u`" -ne 0 ]; then
-    echo "$COMMAND must be run as root.  Exiting."
-    exit 1
+    cat <<EOF
+Warning, normal user Detected!
+Please run with superuser permissions.
+
+Allowing normal users to create subvolumes is a denial of service
+attack vector, because if more than about 300 subvolumes are created
+btrfs can crash, halt with ENOSPC error, in addition to increased likelyhood
+of critical loss of performance.
+EOF
+    echo -n "Proceed? "
+    read choice
+    case "$choice" in
+        yes | y | Yes | YES )
+            echo "Here be dragons..."
+            break
+            ;;
+        no | n | No | NO )
+            echo "Exiting"
+            exit 1
+            ;;
+        * )
+            printf "Please answer yes or no\n\n"
+            ;;
+            esac
 fi
 if [ -d $ROOT/$SNAPS ]; then
     cd $ROOT/$SNAPS
