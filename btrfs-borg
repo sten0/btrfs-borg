@@ -28,6 +28,7 @@ SUBS='@home rootfs' # $SUBS are also relative to $ROOT.  Use @home and @ for
                     # Ubuntu, and use home and rootfs for Fedora.
                     # Back up user data before system data, just in case.
 
+LXCDIR='/var/lib/lxc'
 CONTAINERS='my-LXC-container my-other-LXC-container'
 
     # If you have LXC containers on btrfs subvolumes beneath $ROOT,
@@ -140,17 +141,17 @@ if [ "$CONTAINERS" ]; then
         lxc-stop -n $i
         lxc-snapshot -n $i
         sync
-        btrfs sub sync /var/lib/lxc
+        btrfs sub sync $LXCDIR
         sync
         lxc-start -n $i
         if [ "$LXCSNAPS" == "" ]; then
-            LXCSNAPS="`btrfs sub list $ROOT | grep $i | tail -n1 | awk '{print $NF}'`"
+            LXCSNAPS="`btrfs sub list $LXCDIR | grep $i | tail -n1 | awk '{print $NF}'`"
         else
-            LXCSNAPS="$LXCSNAPS `btrfs sub list $ROOT | grep $i | tail -n1 | awk '{print $NF}'`"
+            LXCSNAPS="$LXCSNAPS `btrfs sub list $LXCDIR | grep $i | tail -n1 | awk '{print $NF}'`"
         fi
     done
-    LCONTS="_"
-    LCONTS="$LCONTS`echo $CONTAINERS | tr ' ' '_'`"
+    LCONTAINS="_"
+    LCONTAINS="$LCONTAINS`echo $CONTAINERS | tr ' ' '_'`"
 fi
 if [ "$OTHERS" ]; then
     DIRS=""
@@ -167,7 +168,7 @@ echo "Doing backup"
 cd $ROOT/$SNAPS
 (time borg create -p -v -v -v --stats $EXTRAARGS -C $COMP \
       --exclude-caches \
-      $REPO::$LSUBS$LCONTS$LOTHS-on-epoch+$DATE\.$COMP \
+      $REPO::$LSUBS$LCONTAINS$LOTHS-on-epoch+$DATE\.$COMP \
       $SUBS $LXCSNAPS $OTHERS 2>&3) 3>&2 2> $REPO/time_stats_$DATE
 echo "Backup took"
 cat $REPO/time_stats_$DATE

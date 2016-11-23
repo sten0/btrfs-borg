@@ -52,10 +52,7 @@
       Configuration)
     - Section on backing up LX Containers: a) unprivileged containers are
       assumed to not be on their own subvolumes, therefore they are assumed to
-      be included
-      in a snapshot of a subvolume such as @home.  b) 
-* Merge LXC support from my personal copy; modify it by adding grep -i lxc
-  after btrfs sub list
+      be included in a snapshot of a subvolume such as @home.  b) 
 
 # TODO: We now clean up snapshots by default...
 #       Make this configurable in the future
