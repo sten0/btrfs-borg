@@ -195,13 +195,10 @@ fi
 # Do backup
 echo "Doing backup"
 cd $ROOT/$SNAPS
-(time borg create $BVERBO --stats $EXTRAARGS -C $COMP \
-      --exclude-caches \
-      $REPO::$LSUBS$LCONTAINS$LOTHS-on-epoch+$DATE\.$COMP \
-      $SUBS $LXCSNAPS $OTHERS 2>&3) 3>&2 2> $REPO/time_stats_$DATE
-echo "Backup took"
-cat $REPO/time_stats_$DATE
-echo
+borg create $BVERBO -p --stats $EXTRAARGS -C $COMP \
+     --exclude-caches \
+     $REPO::$LSUBS$LCONTAINS$LOTHS-on-epoch+$DATE\.$COMP \
+     $SUBS $LXCSNAPS $OTHERS
 
 # Cleanup
 # TODO: We now clean up snapshots by default...
