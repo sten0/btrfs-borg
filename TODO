@@ -11,10 +11,6 @@
         > link to passwordless ssh and borg key-creation HOWTOs
         = $SERVER sshes into $HOST, runs btrfs-borg,
           and this runs backup and sshes into $SERVER
-    - Make it EASY TO CONFIGURE!
-        > the script must figure out the details from
-          REPO='user@host:/path/to/repo', extract
-          $REMUSER -d=@ $REMHOST and $REMREPO to do the sanity checks.
 * Add local backup disk mount/umount support
     - Is udisk really the best way to safely,
       logically disconnect USB disks?
