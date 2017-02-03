@@ -17,8 +17,15 @@
 # 
 
 ROOT='/btrfs-admin' # Mountpoint for the whole volume
-                    # I mount subvols individually, so this is how I centralise
-                    # administration of my btrfs volume.
+                    # Btrfs-borg is designed to operate on named subvolumes.
+                    # If you do not already have this directory, create it
+                    # like this:
+                    # install -d -m 700 /btrfs-admin
+                    # Then, for Ubuntu do this to /etc/fstab:
+# / was on /dev/sda1 during installation
+#UUID=0x000000-0000-0000-0000-000000000000 / btrfs defaults,subvol=@ 0 1
+# /\ duplicate this line, then the mountpoint and remote subvol argument
+#UUID=0x000000-0000-0000-0000-000000000000 /btrfs-admin btrfs defaults 0 1
 
 SNAPS='snapshots'   # $SNAPS is relative to $ROOT.  eg: /btrfs-admin/snapshots
                     # On my system it is a normal directory used to centralise
@@ -40,17 +47,29 @@ CONTAINERS='my-LXC-container my-other-LXC-container'
     # to skip LXC container backup.  If you leave it empty and your
     # LXC containers are somewhere inside one of the $SUBS then the
     # containers will be backed up without stopping them.
+    # If your LXC containers are on their own subvolumes, but are not
+    # listed here, and their subvolumes are not listed in SUBS,
+    # they will not be backed up!
+
+# TODO!  Contact someone who is intimately familiar with LXC+btrfs
+# and get his/her opinion on the best way to backup LXC containers
+# with btrfs backend.  eg: lxc snapshot vs directly using btrfs snapshot
 
 REPO='/media/usb/Cuboid_Borg'
 #REPO='user@host:/path/to/borg/repo'  # example for ssh-connected repo
 
 COMP='lz4'          # see borg(1) section on -C COMPRESSION
+
 # If you don't use btrfs on /; useful backups need both /var & /etc
 # Please note that databases in /var won't be consistent unless you freeze
 # or snapshot them somehow
 OTHERS=''           # If your /boot is on a separate partition, /boot needs to
                     # be in the list of $OTHERS, or your backup won't be able
-                    # to restore a bootable system!
+                    # to restore a bootable system!  It might also be a good
+                    # idea to backup the UEFI ESP ;-)
+
+# TODO: test if each $OTHERS is an empty directory, and try mounting it if
+# it is?
 
                     # Comment out any of the following time periods to disable
 #HOURLY=24          # Disable hourly, because I backup once or twice a week
@@ -85,6 +104,10 @@ COMMAND="`basename $0`"
 # Seconds since epoch will allow you to make backups just about
 # as often as possible, unless you theoretically have a *really*
 # fast system and *really* fast disks, and no changed files
+# I chose not to use a format like 2016-01-12-17:03:09
+# because btrfs list already outputs this format in the right-hand
+# column, and someone might find machine-readable date stamps useful
+# for his/her custom pruning script.  P.S. seconds since epoch is cool ;-)
 export DATE=`date +%s`
 
 # Sanity checks
@@ -95,8 +118,8 @@ Please run with superuser permissions.
 
 Allowing normal users to create subvolumes is a denial of service
 attack vector, because if more than about 300 subvolumes are created
-btrfs can crash, halt with ENOSPC error, in addition to increased likelyhood
-of critical loss of performance.
+btrfs can crash, or halt with ENOSPC error; additionaly, performance
+will suffer with more than ~300 subvolumes.
 EOF
     echo -n "Proceed? "
     read choice
