@@ -59,3 +59,13 @@
 #      echo "Removing $EXPIRE"
 #      lxc-snapshot -n get-transmissions -d $EXPIRE
 #done
+
+* Add optional support for backing up multiple hosts to the same repo
+  ...which means more efficient deduplication!
+   - Gabor's suggestion :-)
+   - Needs to automatically uniquely name backups
+     Is `hostname` sufficient?
+   - Needs to pass the unique identifier to borg prune, using the
+     prefix parameter, so that the backups of each host are pruned
+     (backups for host) instead of (backups for host1 and host2 and
+     etc.)
