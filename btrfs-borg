@@ -108,6 +108,7 @@ COMMAND="`basename $0`"
 # because btrfs list already outputs this format in the right-hand
 # column, and someone might find machine-readable date stamps useful
 # for his/her custom pruning script.  P.S. seconds since epoch is cool ;-)
+# Additionally, some filesystems don't handle the colon ":" very well
 export DATE=`date +%s`
 
 # Sanity checks
