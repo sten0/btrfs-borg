@@ -1,3 +1,4 @@
+* Check for the existence of the "install" command!
 * When btrfs-borg is feature-complete, tag 1.0
 * Goal: allow separation of configuration from script
   - start with upcoming CSV support
