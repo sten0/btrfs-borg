@@ -105,10 +105,14 @@ COMMAND="`basename $0`"
 # as often as possible, unless you theoretically have a *really*
 # fast system and *really* fast disks, and no changed files
 # I chose not to use a format like 2016-01-12-17:03:09
-# because btrfs list already outputs this format in the right-hand
+# because borg list <REPO> already outputs this format in the right-hand
 # column, and someone might find machine-readable date stamps useful
 # for his/her custom pruning script.  P.S. seconds since epoch is cool ;-)
 # Additionally, some filesystems don't handle the colon ":" very well
+# Finally, it's shorter than the ISO format (date, time, timezone) yet provides
+# the same information. eg:
+# 2017-02-05T14:41:19-0500  vs
+# 1486323679
 export DATE=`date +%s`
 
 # Sanity checks
