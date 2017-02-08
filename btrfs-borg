@@ -136,7 +136,9 @@ attack vector, because if more than about 300 subvolumes are created
 btrfs can crash, or halt with ENOSPC error; additionaly, performance
 will suffer with more than ~300 subvolumes.
 
-Additionally, root seems to be required to remove subvolumes!
+Finally root is required to remove subvolumes, unless
+"user_subvol_rm_allowed" is specified for the volume in /etc/fstab.
+Personally, I believe this approach is unwise...
 EOF
     NOTFOUND=1
 fi
