@@ -26,7 +26,7 @@ ROOT='/btrfs-admin' # Mountpoint for the whole volume
                     # Then, for Ubuntu do this to /etc/fstab:
 # / was on /dev/sda1 during installation
 #UUID=0x000000-0000-0000-0000-000000000000 / btrfs defaults,subvol=@ 0 1
-# /\ duplicate this line, then the mountpoint and remote subvol argument
+# /\ duplicate this line, then the mountpoint and remove the subvol argument
 #UUID=0x000000-0000-0000-0000-000000000000 /btrfs-admin btrfs defaults 0 1
 
 SNAPS='snapshots'   # $SNAPS is relative to $ROOT.  eg: /btrfs-admin/snapshots
