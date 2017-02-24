@@ -2,7 +2,7 @@
 * Goal: allow separation of configuration from script
   - start with upcoming CSV support
 * Add SSH support (requires borgbackup on server)
-    - Write HOWTO for server-initiated backup
+    - Write HOWTO for server-initiated backup?
         > limit available commands for root on $HOST to btrfs-borg
           + Would it be better to configure passwordless sudo
             for the btrfs-borg command for $HOST's btrfs-borg user?
@@ -11,9 +11,9 @@
         > link to passwordless ssh and borg key-creation HOWTOs
         = $SERVER sshes into $HOST, runs btrfs-borg,
           and this runs backup and sshes into $SERVER
+* More thouroughly test SSH support.
 * Add local backup disk mount/umount support
-    - Is udisk really the best way to safely,
-      logically disconnect USB disks?
+    - Is udisk really the best way to safely logically disconnect USB disks?
     - allow borg-btrfs to manage mount/umount via udisk by defining mount point
         !! Leaving it blank means borg-btrfs will not manage the mount !!
         !! MUST correspond to a fstab entry with adequate permissions !!
@@ -78,3 +78,45 @@
   - alternatively, use the "--prefix" feature to store ARCHIVEIDS
     within the borg REPO and prevent them from being pruned... This prevents
     information leaks, but I'm not sure if it's sufficently secure...
+* Related to the comma sepparated list and --prefix:
+   - maybe I should do it as follows...
+     1) automatically prefix hostname  2) comma sepparated list for
+      "backup unit" which becomes a particular "borg archive"  3)
+      The backup unit must have the following elements:
+      - ROOT volume
+      - Directory: check to see if it's a btrfs subvol, otherwise make
+        it an "OTHERS"
+      - This SIMPLIFIES things for the user, because he/she no longer
+        has to worry about SRC data types! ;-)
+     4) Pruning needs to be adapted to operate on these new backup
+     5) Iterate through all of the backup units
+     6) Accept a backup unit as the sole command line argument?         
+   - This idea enables multiple aging tiers for backups, and multiple
+     btrfs volumes.  This functionality might come later...but it
+     will immediately allow the sysadmin to recover hard drive space
+     by "early retirement" of a backup unit that does not require as fine
+     grained history as another backup unit.  eg: @work-in-progress
+     needs to always have an up-to-date backup, and X days of backups,
+     but probably does not need months or years...it just takes up
+     extra space, and @work-portfolio is what is important in the long-term.
+     > eg: BACKUP-UNIT="/btrfs-admin/Red,@home var/lib/lxc/my_container"
+       - test for data type with "btrfs sub show $ROOT/$SUBVOL" and check
+         value of $? for each unit of the second element.  If true
+         append to $SUBS, otherwise append to $OTHERS
+   - Backup units are important...OS data from multiple hosts might
+     not matter that much, so multiple hosts can share the same
+     repository.  It is also advantageous to centralise backups of
+     containers from multiple container servers.  On the other hand,
+     I think that it is probably just going to slow things down if
+     deduplication of user data from host A is attempted against user
+     data from host B.
+   > Or should "backup units" include target disk?
+     eg: BACKUP-UNIT="/Red,@home var/lib/lxc/my_container,[user@host:]/dest/mountpoint,[user@host:]/borg/repo"
+* Make /borg/repo variable relative to /dest/mountpoint! (see section
+  on udisk mounting)  By default, if BACKUP-UNIT is passed as a
+   command line argument, do not unmount without explicit
+   authorisation...needs another command line argument.
+   The config-file.csv method makes one borg archive per line, and
+   unmounts after the backup of the last line completes.  
+* A cleanup is due!
+* Centralise documentation to an .asciidoc and use this to generate a manpage.
