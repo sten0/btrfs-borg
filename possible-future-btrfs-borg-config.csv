@@ -1,0 +1,7 @@
+Backup unit (optional custom –prefix name for borg archive),Root of Volume,Source objects (subvols or absolute paths),Manifests (optional),Path to Borg repo,Keep within,Keep hourly,Keep daily,Keep weekly,Keep monthly,Keep yearly
+hostname_@stuff,/btrfs-admin/Red,@stuff /absolute/path/does/not/need/to/be/under/Red,,/media/usb0/borg_repo,,,,1,4,1
+OS_userdata_LXCs,/btrfs-admin/Blue,@ @home /unprivileged/container.name/must/be/under/Blue,,user@host:/path/to/repo/for/hostname,,24,7,4,12,7
+,/btrfs-admin/Black,@scratch /path/to/docker/containers?,/absolute/path,/media/usb1/borg_repo,,,1,1,1,1
+System-LXCs,/btrfs-admin/Blue,/var/lib/lxc/my-container0 /var/lib/lxc/my-container1 automatically-find-my-container3,,user@offsite:/path/to/repo/for/LXCs,3m,,,,12,5
+,,,,,,,,,,
+"In the absence of a backup unit name, default to a format like `hostname`-`basename $volume_root`-@stuff_@home_container.name-`date +%s`",,,,,,,,,,
