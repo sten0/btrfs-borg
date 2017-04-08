@@ -1,6 +1,9 @@
+* ASAP uncapitalise all variables, because CAPS_VARS are for
+  environmental variables.
 * When btrfs-borg is feature-complete, tag 1.0
 * Goal: allow separation of configuration from script
-  - start with upcoming CSV support
+    - start with upcoming CSV support
+    - provide example script for populating the CSV?
 * Add SSH support (requires borgbackup on server)
     - Write HOWTO for server-initiated backup?
         > limit available commands for root on $HOST to btrfs-borg
@@ -11,8 +14,13 @@
         > link to passwordless ssh and borg key-creation HOWTOs
         = $SERVER sshes into $HOST, runs btrfs-borg,
           and this runs backup and sshes into $SERVER
-* More thouroughly test SSH support.
-* Add local backup disk mount/umount support
+* More thoroughly test SSH support.
+* Store the partition and subvolume layout, ARCHIVEIDS,
+  and also strong checksums of the generated files as:
+    `hostname`_partitions_subvolume-layout_ARCHIVEIDS
+    as a tiny borg-archive?
+* Add local backup disk mount/umount support? (or provide example
+  wrapper script)
     - Is udisk really the best way to safely logically disconnect USB disks?
     - allow borg-btrfs to manage mount/umount via udisk by defining mount point
         !! Leaving it blank means borg-btrfs will not manage the mount !!
@@ -36,7 +44,7 @@
     - while IFS=, read X Y Z rest; do echo "X is $X" "Y is $Y" "Z is $Z";\
           done < ~/btrfs-borg.csv
        !! PROBLEM !! -> need to somehow strip row 1, eg:
-	      ROOT,SNAPS,SUBS,CONTAINERS
+              ROOT,SNAPS,SUBS,CONTAINERS
     - easiest thing to do is tail -n +2 $CSV-CONFIG > \
           $REPO/btrfs-borg/config.csv.tmp
       then < REPO/btrfs-borg/config.csv.tmp
@@ -62,9 +70,13 @@
 #done
 
 * Create knob for btrfs snapshot of LXC containers, without using
-  lxc-snapshot, which shuts them down.  This is desireable for all but
+  lxc-snapshot, which shuts them down.  This is desirable for all but
   database workloads:
   https://www.flockport.com/supercharge-lxc-with-btrfs/
+    - Alternatively, treat LXC containers as regular subvols by default
+      * This means using btrfs sub list to automatically find them
+      * If an absolute path is given, then check to see if it's an LXC
+        and if it is a container, then run lxc-stop and lxc-snapshot
 * Add optional support for backing up multiple hosts to the same repo
   ...which means more efficient deduplication!
    - Gabor's suggestion :-)
@@ -77,10 +89,10 @@
 * Make location of ARCHIVEIDS configurable
   - alternatively, use the "--prefix" feature to store ARCHIVEIDS
     within the borg REPO and prevent them from being pruned... This prevents
-    information leaks, but I'm not sure if it's sufficently secure...
-* Related to the comma sepparated list and --prefix:
+    information leaks, but I'm not sure if it's sufficiently secure...
+* Related to the comma separated list and --prefix:
    - maybe I should do it as follows...
-     1) automatically prefix hostname  2) comma sepparated list for
+     1) automatically prefix hostname  2) comma separated list for
       "backup unit" which becomes a particular "borg archive"  3)
       The backup unit must have the following elements:
       - ROOT volume
@@ -91,7 +103,7 @@
      4) Pruning needs to be adapted to operate on these new backup
      5) Iterate through all of the backup units
      6) Accept a backup unit as the sole command line argument?         
-   - This idea enables multiple aging tiers for backups, and multiple
+   - This idea enables multiple ageing tiers for backups, and multiple
      btrfs volumes.  This functionality might come later...but it
      will immediately allow the sysadmin to recover hard drive space
      by "early retirement" of a backup unit that does not require as fine
@@ -120,3 +132,17 @@
    unmounts after the backup of the last line completes.  
 * A cleanup is due!
 * Centralise documentation to an .asciidoc and use this to generate a manpage.
+* Support backing up LX containers with wildcards?
+  eg: find the rootfs of all /var/lib/lxc/* /home/webdev0/* /home/webdev1/*
+  get basename for each container
+  snapshot them under /$ROOT/snapshots/LXC-$BN-rootfs
+  come up with a special archive naming scheme?
+    - /var/lib/lxc/* ->  "$ARCHIVE_NAME lib_LXCs"
+    - /home/webdev0/* -> "$ARCHIVE_NAME webdev0_LXCs"
+* Alternatively, provide a script to populate a .CSV with all
+  containers found under a path.
+* Allow BACKUP-SRCS, or BACKUP-UNITS to point to a .csv file.
+  The idea is to make basic configuration as easy as possible.
+  Pre-populated value should be two lines: one for @ and one for
+  @home.  Write an example config for OpenSuSE users?
+* BORG-REPO needs to be part of BACKUP-UNIT
