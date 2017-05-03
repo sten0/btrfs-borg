@@ -101,7 +101,10 @@ echo "Manifests have not been configured, please edit $0"
 ##############################################################################
 ####################### Configurable portion ends here #######################
 ##############################################################################
+
+# TODO: cleanup, iterate
 export ROOT
+# TODO: future prep section
 btrfs_borg="`basename $0`"
 export DATE=`date +%s`
 
@@ -119,10 +122,12 @@ will suffer with more than ~300 subvolumes.
 
 Finally root is required to remove subvolumes, unless
 "user_subvol_rm_allowed" is specified for the volume in /etc/fstab.
-Personally, I believe this approach is unwise...
+that said, I firmly maintain that normal user subvolume creation
+should be avoided for the foreseeable future.
 EOF
     notfound=1
 fi
+# Check for necessary requirements
 for c in install btrfs borg; do
     type $c >/dev/null 2>&1
     if [ $? -ne 0 ]; then
