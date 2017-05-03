@@ -1,5 +1,3 @@
-* ASAP uncapitalise all variables, because CAPS_VARS are for
-  exported environmental variables.
 * When btrfs-borg is feature-complete, tag 1.0
 * Goal: allow separation of configuration from script
     - start with upcoming CSV support

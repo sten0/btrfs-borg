@@ -23,16 +23,16 @@
 echo "Please read README.md and then edit $0" ; exit 1
 # /\                                                       /\
 
-SNAPS='snapshots'   # $SNAPS is relative to $ROOT.  eg: /btrfs-admin/snapshots
+snaps='snapshots'   # $snaps is relative to $ROOT.  eg: /btrfs-admin/snapshots
                     # On my system it is a normal directory used to centralise
                     # snapshots.
 
-SUBS='@home rootfs' # $SUBS are also relative to $ROOT.  Use @home and @ for
+subs='@home rootfs' # $subs are also relative to $ROOT.  Use @home and @ for
                     # Ubuntu, and use home and rootfs for Fedora.
                     # Back up user data before system data, just in case.
 
-LXCDIR='/var/lib/lxc'
-CONTAINERS='my-LXC-container my-other-LXC-container'
+lxcdir='/var/lib/lxc'
+containers='my-LXC-container my-other-LXC-container'
 
     # If you have LXC containers on btrfs subvolumes beneath $ROOT,
     # that are managed by LXC's btrfs backend, then list them here in
@@ -41,41 +41,41 @@ CONTAINERS='my-LXC-container my-other-LXC-container'
     # because at this point in time (2016-11-12) LXC 2.x containers
     # need to be stopped before they can be snapshotted.  Leave empty
     # to skip LXC container backup.  If you leave it empty and your
-    # LXC containers are somewhere inside one of the $SUBS then the
+    # LXC containers are somewhere inside one of the $subs then the
     # containers will be backed up without stopping them.
     # If your LXC containers are on their own subvolumes, but are not
-    # listed here, and their subvolumes are not listed in SUBS,
+    # listed here, and their subvolumes are not listed in subs,
     # they will not be backed up!
 
 # TODO!  Contact someone who is intimately familiar with LXC+btrfs
 # and get his/her opinion on the best way to backup LXC containers
 # with btrfs backend.  eg: lxc snapshot vs directly using btrfs snapshot
 
-REPO='/media/usb/Cuboid_Borg'
-#REPO='user@host:/path/to/borg/repo'  # example for ssh-connected repo
+repo='/media/usb/Cuboid_Borg'
+#repo='user@host:/path/to/borg/repo'  # example for ssh-connected repo
 
-COMP='lz4'          # see borg(1) section on -C COMPRESSION
+comp='lz4'          # see borg(1) section on -C COMPRESSION
 
 # If you don't use btrfs on /; useful backups need both /var & /etc
 # Please note that databases in /var won't be consistent unless you freeze
 # or snapshot them somehow
-OTHERS=''           # If your /boot is on a separate partition, /boot needs to
-                    # be in the list of $OTHERS, or your backup won't be able
+others=''           # If your /boot is on a separate partition, /boot needs to
+                    # be in the list of $others, or your backup won't be able
                     # to restore a bootable system!  It might also be a good
                     # idea to backup the UEFI ESP ;-)
 
-# TODO: test if each $OTHERS is an empty directory, and try mounting it if
+# TODO: test if each $others is an empty directory, and try mounting it if
 # it is?
 
                     # Comment out any of the following time periods to disable
-#HOURLY=24          # Disable hourly, because I backup once or twice a week
-DAILY=7
-WEEKLY=4
-MONTHLY=12
-YEARLY=5
+#hourly=24          # Disable hourly, because I backup once or twice a week
+daily=7
+weekly=4
+monthly=12
+yearly=5
                     # Configure verbosity for various borg subcommands.
-BVERBO='--info'     # See borg(1) for details.
-ARCHIVEIDS=''       # Set to non-null to create copies of the output of
+bverbo='--info'     # See borg(1) for details.
+archiveids=''       # Set to non-null to create copies of the output of
                     # borg-list for each invocation of btrfs-borg
                     #   - used to mitigate against attacks such as the
                     # "Pre-1.0.9 manifest spoofing vulnerability".
@@ -95,27 +95,14 @@ echo "Manifests have not been configured, please edit $0"
 # contain a file named CACHEDIR.TAG; these can be created like this:
 # touch /home/*/.cache/CACHEDIR.TAG
 
-# EXTRAARGS='--exclude-caches'
+# extraargs='--exclude-caches'
 
 
 ##############################################################################
 ####################### Configurable portion ends here #######################
 ##############################################################################
 export ROOT
-COMMAND="`basename $0`"
-
-# Seconds since epoch will allow you to make backups just about
-# as often as possible, unless you theoretically have a *really*
-# fast system and *really* fast disks, and no changed files
-# I chose not to use a format like 2016-01-12-17:03:09
-# because borg list <REPO> already outputs this format in the right-hand
-# column, and someone might find machine-readable date stamps useful
-# for his/her custom pruning script.  P.S. seconds since epoch is cool ;-)
-# Additionally, some filesystems don't handle the colon ":" very well
-# Finally, it's shorter than the ISO format (date, time, timezone) yet provides
-# the same information. eg:
-# 2017-02-05T14:41:19-0500  vs
-# 1486323679
+btrfs_borg="`basename $0`"
 export DATE=`date +%s`
 
 # Sanity checks
@@ -134,16 +121,16 @@ Finally root is required to remove subvolumes, unless
 "user_subvol_rm_allowed" is specified for the volume in /etc/fstab.
 Personally, I believe this approach is unwise...
 EOF
-    NOTFOUND=1
+    notfound=1
 fi
 for c in install btrfs borg; do
     type $c >/dev/null 2>&1
     if [ $? -ne 0 ]; then
        echo "$c not found"
-       NOTFOUND=1
+       notfound=1
     fi
 done
-if [ -z ${NOTFOUND+x} ]; then
+if [ -z ${notfound+x} ]; then
     echo -n "Proceed? "
     read choice
     case "$choice" in
@@ -162,9 +149,9 @@ if [ -z ${NOTFOUND+x} ]; then
 fi
 
 # Other sanity checks
-if [ -d $ROOT/$SNAPS ]; then
-    cd $ROOT/$SNAPS
-    for i in $SUBS; do
+if [ -d $ROOT/$snaps ]; then
+    cd $ROOT/$snaps
+    for i in $subs; do
         if [ -d $i ]; then
             AGE=`stat -c %Y $i`
             echo "Moving existing snapshot of $i out of the way to $i@$AGE"
@@ -175,90 +162,90 @@ if [ -d $ROOT/$SNAPS ]; then
         sync
     done
 else
-    echo "$ROOT/$SNAPS not found! $COMMAND cannot continue."
-    echo "Please mkdir $ROOT/$SNAPS and try again"
+    echo "$ROOT/$snaps not found! $btrfs_borg cannot continue."
+    echo "Please mkdir $ROOT/$snaps and try again"
     exit 1
 fi
 
-REMUSER=`echo $REPO | cut -d@ -f1`
-REMHOST=`echo $REPO | cut -d@ -f2 | cut -d: -f1`
-REMREPO=`echo $REPO | cut -d: -f2`
+remuser=`echo $repo | cut -d@ -f1`
+remhost=`echo $repo | cut -d@ -f2 | cut -d: -f1`
+remrepo=`echo $repo | cut -d: -f2`
 
-if [ -n "$REMUSER" ] && [ -n "$REMHOST" ] && [ -n "$REMREPO" ]; then
-    ssh $REMUSER@$REMHOST "test -e $REMREPO/config"
-elif [ ! -f $REPO/config ]; then
+if [ -n "$remuser" ] && [ -n "$remhost" ] && [ -n "$remrepo" ]; then
+    ssh $remuser@$remhost "test -e $remrepo/config"
+elif [ ! -f $repo/config ]; then
     false
 fi
 if [ $? -ne 0 ]; then
     cat <<EOF
-$REPO/config not found!
+$repo/config not found!
 Is your backup target disk plugged in and mounted?
 Did you initialize the borg repository?
 EOF
     exit 1
 fi
-echo "Configuration found for $REPO"
+echo "Configuration found for $repo"
 
 # Prepare
 echo "Preparing..."
 sync
 btrfs sub sync $ROOT
 sync
-for i in $SUBS; do
-    btrfs sub snap -r $ROOT/$i $ROOT/$SNAPS/$i
+for i in $subs; do
+    btrfs sub snap -r $ROOT/$i $ROOT/$snaps/$i
     sync
-    btrfs sub sync $ROOT/$SNAPS/$i
+    btrfs sub sync $ROOT/$snaps/$i
     sync
 done
-LSUBS=`echo $SUBS | tr ' ' '_'`
-if [ -n "$CONTAINERS" ]; then
-    unset LXCSNAPS
-    for i in $CONTAINERS; do
+lsubs=`echo $subs | tr ' ' '_'`
+if [ -n "$containers" ]; then
+    unset lxcsnaps
+    for i in $containers; do
         lxc-stop -n $i
         lxc-snapshot -n $i
         sync
-        btrfs sub sync $LXCDIR
+        btrfs sub sync $lxcdir
         sync
         lxc-start -n $i
-        if [ -z "$LXCSNAPS" ]; then
-            LXCSNAPS="`btrfs sub list $LXCDIR | grep $i | tail -n1 | awk '{print $NF}'`"
+        if [ -z "$lxcsnaps" ]; then
+            lxcsnaps="`btrfs sub list $lxcdir | grep $i | tail -n1 | awk '{print $NF}'`"
         else
-            LXCSNAPS="$LXCSNAPS `btrfs sub list $LXCDIR | grep $i | tail -n1 | awk '{print $NF}'`"
+            lxcsnaps="$lxcsnaps `btrfs sub list $lxcdir | grep $i | tail -n1 | awk '{print $NF}'`"
         fi
     done
-    LCONTAINS="_"
-    LCONTAINS="$LCONTAINS`echo $CONTAINERS | tr ' ' '_'`"
+    lcontains="_"
+    lcontains="$lcontains`echo $containers | tr ' ' '_'`"
 fi
-if [ -n "$OTHERS" ]; then
-    DIRS=""
-    for i in $OTHERS; do
-        DIRS="$DIRS `basename $i`"
+if [ -n "$others" ]; then
+    dirs=""
+    for i in $others; do
+        dirs="$dirs `basename $i`"
     done
-    LOTHS="_"
-    LOTHS="$LOTHS`echo $DIRS | tr ' ' '_'`"
+    loths="_"
+    loths="$loths`echo $dirs | tr ' ' '_'`"
 fi
 
 
 # Do backup
 echo "Doing backup"
-cd $ROOT/$SNAPS
-if [ -n "$REMUSER" ] && [ -n "$REMHOST" ] && [ -n "$REMREPO" ]; then
-    STATS=$HOME/time_stats_$DATE
+cd $ROOT/$snaps
+if [ -n "$remuser" ] && [ -n "$remhost" ] && [ -n "$remrepo" ]; then
+    stats=$HOME/time_stats_$DATE
 else
-    STATS=$REPO/time_stats_$DATE
+    stats=$repo/time_stats_$DATE
 fi
-borg create $BVERBO -p --stats $EXTRAARGS -C $COMP \
+borg create $bverbo -p --stats $extraargs -C $comp \
      --exclude-caches \
-     $REPO::$LSUBS$LCONTAINS$LOTHS-on-epoch+$DATE\.$COMP \
-     $SUBS $LXCSNAPS $OTHERS
+     $repo::$lsubs$lcontains$loths-on-epoch+$DATE\.$comp \
+     $subs $lxcsnaps $others
 
 # Cleanup
 # TODO: We now clean up snapshots by default...
 #       Make this configurable in the future
-# TODO ASAP!!: remove LXC snapshot generated by $COMMAND
+# TODO ASAP!!: remove LXC snapshot generated by $btrfs_borg
 # something like:
 #
-#for i in $CONTAINERS; do
+#for i in $containers; do
 #      lxc-snapshot -L -n $i
 #      EXPIRE="`lxc-snapshot -L -n $i | tail -1 | awk '{print $1}'`"
 #      echo "Removing $EXPIRE"
@@ -266,70 +253,70 @@ borg create $BVERBO -p --stats $EXTRAARGS -C $COMP \
 #done
 echo "Cleaning up Snapshots"
 (time (
-        cd $ROOT/$SNAPS
-        btrfs sub delete -c $SUBS
+        cd $ROOT/$snaps
+        btrfs sub delete -c $subs
         echo "Syncing...please be patient, this could be slow"
         sync
         btrfs sub sync $ROOT
         sync)
- 2>&3) 3>&2 2> $STATS
+ 2>&3) 3>&2 2> $stats
 echo -n "Cleanup took "
-cat $STATS
+cat $stats
 echo
 
-unset PRUNE
-if [ -n "$HOURLY" ]; then PRUNE="-H $HOURLY"; fi
-if [ -n "$DAILY" ]; then PRUNE="$PRUNE -d $DAILY"; fi
-if [ -n "$WEEKLY" ]; then PRUNE="$PRUNE -w $WEEKLY"; fi
-if [ -n "$MONTHLY" ]; then PRUNE="$PRUNE -m $MONTHLY"; fi
-if [ -n "$YEARLY" ]; then PRUNE="$PRUNE -y $YEARLY"; fi
-if [ -n "$PRUNE" ]; then
+unset prune
+if [ -n "$hourly" ]; then prune="-H $hourly"; fi
+if [ -n "$daily" ]; then prune="$prune -d $daily"; fi
+if [ -n "$weekly" ]; then prune="$prune -w $weekly"; fi
+if [ -n "$monthly" ]; then prune="$prune -m $monthly"; fi
+if [ -n "$yearly" ]; then prune="$prune -y $yearly"; fi
+if [ -n "$prune" ]; then
     echo "Initiating pruning.  Please do not be alarmed if this takes forever"
-    (time borg prune $BVERBO --stats $PRUNE $REPO 2>&3) \
-        3>&2 2> $STATS
+    (time borg prune $bverbo --stats $prune $repo 2>&3) \
+        3>&2 2> $stats
     echo -n "Pruning took "
-    cat $STATS
+    cat $stats
     echo
-    rm $STATS
+    rm $stats
 fi
-BASE=`basename $ROOT`
+base=`basename $ROOT`
 # Bundle stuff that will make restoring from backup easier
-if [ -n "$REMUSER" ] && [ -n "$REMHOST" ] && [ -n "$REMREPO" ]; then
-    ssh $REMUSER@$REMHOST "install -d -m 700  $REMREPO/btrfs-borg"
-    if [ -z ${ARCHIVEIDS+x} ]; then
-        borg list $REPO > $HOME/borg-list.$DATE
+if [ -n "$remuser" ] && [ -n "$remhost" ] && [ -n "$remrepo" ]; then
+    ssh $remuser@$remhost "install -d -m 700  $remrepo/btrfs-borg"
+    if [ -z ${archiveids+x} ]; then
+        borg list $repo > $HOME/borg-list.$DATE
         chmod 400 $HOME/borg-list.$DATE
-        # Add immutable ACL to $COMMAND-list.$DATE?
+        # Add immutable ACL to $btrfs_borg-list.$DATE?
         scp $HOME/borg-list.$DATE \
-            $REMUSER@$REMHOST:$REMREPO/btrfs-borg/borg-list.$DATE && \
+            $remuser@$remhost:$remrepo/btrfs-borg/borg-list.$DATE && \
             rm $HOME/borg-list.$DATE
     fi
-    ssh $REMUSER@$REMHOST "test -e $REMREPO/btrfs-borg/$COMMAND"
+    ssh $remuser@$remhost "test -e $remrepo/btrfs-borg/$btrfs_borg"
     if [ $? -eq 0 ]; then
-        ssh $REMUSER@$REMHOST "mv $REMREPO/btrfs-borg/$COMMAND $REMREPO/btrfs-borg/$COMMAND.old"
+        ssh $remuser@$remhost "mv $remrepo/btrfs-borg/$btrfs_borg $remrepo/btrfs-borg/$btrfs_borg.old"
     fi
-    install -m 500 "$0" $HOME/"$COMMAND.${DATE}" && \
-        scp $HOME/$COMMAND.$DATE \
-            $REMUSER@$REMHOST:$REMREPO/btrfs-borg/$COMMAND && \
-        rm $HOME/"$COMMAND.${DATE}"
+    install -m 500 "$0" $HOME/"$btrfs_borg.${DATE}" && \
+        scp $HOME/$btrfs_borg.$DATE \
+            $remuser@$remhost:$remrepo/btrfs-borg/$btrfs_borg && \
+        rm $HOME/"$btrfs_borg.${DATE}"
     # \/ TODO \/
-    #install -d -m 400 $BTRFS-BORG.CSV $REPO/btrfs-borg/$BTRFS-BORG.CSV
+    #install -d -m 400 $BTRFS-BORG.CSV $repo/btrfs-borg/$BTRFS-BORG.CSV
     # TODO: make this iterate for multiple ROOTS
-    btrfs sub list $ROOT | ssh $REMUSER@$REMHOST "cat > $REMREPO/btrfs-borg/subvolumes_of_$BASE"
+    btrfs sub list $ROOT | ssh $remuser@$remhost "cat > $remrepo/btrfs-borg/subvolumes_of_$base"
 else
     # Bundle stuff that will make restoring from backup easier
-    mkdir -p $REPO/btrfs-borg && chown 700 $REPO/btrfs-borg
-    if [ -f $REPO/btrfs-borg/$COMMAND ]; then
-        mv $REPO/btrfs-borg/$COMMAND $REPO/btrfs-borg/$COMMAND.old
+    mkdir -p $repo/btrfs-borg && chown 700 $repo/btrfs-borg
+    if [ -f $repo/btrfs-borg/$btrfs_borg ]; then
+        mv $repo/btrfs-borg/$btrfs_borg $repo/btrfs-borg/$btrfs_borg.old
     fi
-    install -d -m 500 "$0" $REPO/btrfs-borg/$COMMAND
-    if [ -z ${ARCHIVEIDS+x} ]; then
-        borg list $REPO > $REPO/btrfs-borg/borg-list.$DATE
-        chmod 400 $REPO/btrfs-borg/borg-list.$DATE
-        # Add immutable ACL to $COMMAND-list.$DATE?
+    install -d -m 500 "$0" $repo/btrfs-borg/$btrfs_borg
+    if [ -z ${archiveids+x} ]; then
+        borg list $repo > $repo/btrfs-borg/borg-list.$DATE
+        chmod 400 $repo/btrfs-borg/borg-list.$DATE
+        # Add immutable ACL to $btrfs_borg-list.$DATE?
     fi
     # \/ TODO \/
-    #install -d -m 400 $BTRFS-BORG.CSV $REPO/btrfs-borg/$BTRFS-BORG.CSV
+    #install -d -m 400 $BTRFS-BORG.CSV $repo/btrfs-borg/$BTRFS-BORG.CSV
     # TODO: make this iterate for multiple ROOTS
-    btrfs sub list $ROOT > $REPO/btrfs-borg/subvolumes_of_$BASE
+    btrfs sub list $ROOT > $repo/btrfs-borg/subvolumes_of_$base
 fi
