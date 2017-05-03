@@ -351,60 +351,77 @@ cleanup() {
     echo
 }
 
+# Prune TODO: LOCAL VARS from backup_unit
+# ESSENTIAL!
+# BACKUP_UNITS='/btrfs-admin/Red, @stuff @more
+# /btrfs-admin/Blue, @ @home /var/lib/lxc/my-container '
+# Means my naming scheme needs to be:
+# get basename of $ROOT
+#     if basename is /btrfs-admin, then do nothing
+#   else, BS=Blue
+# $HOSTNAME-$BS-@stuff_@more is the creation and pruning prefix
+# True-Blue-@_@home_my-container_$DATE
+prune() {
+    unset prune
+    if [ -n "$hourly" ]; then prune="-H $hourly"; fi
+    if [ -n "$daily" ]; then prune="$prune -d $daily"; fi
+    if [ -n "$weekly" ]; then prune="$prune -w $weekly"; fi
+    if [ -n "$monthly" ]; then prune="$prune -m $monthly"; fi
+    if [ -n "$yearly" ]; then prune="$prune -y $yearly"; fi
+    if [ -n "$prune" ]; then
+        echo "Initiating pruning.  Please do not be alarmed if this takes forever"
+        (time borg prune $verbos --stats $prune $repo 2>&3) \
+            3>&2 2> $stats
+        echo -n "Pruning took "
+        cat $stats
+        echo
+        rm $stats
+    fi
+    # TODO: do something about \/ THIS \/
+    base=`basename $ROOT`
+}
 
-unset prune
-if [ -n "$hourly" ]; then prune="-H $hourly"; fi
-if [ -n "$daily" ]; then prune="$prune -d $daily"; fi
-if [ -n "$weekly" ]; then prune="$prune -w $weekly"; fi
-if [ -n "$monthly" ]; then prune="$prune -m $monthly"; fi
-if [ -n "$yearly" ]; then prune="$prune -y $yearly"; fi
-if [ -n "$prune" ]; then
-    echo "Initiating pruning.  Please do not be alarmed if this takes forever"
-    (time borg prune $verbos --stats $prune $repo 2>&3) \
-        3>&2 2> $stats
-    echo -n "Pruning took "
-    cat $stats
-    echo
-    rm $stats
-fi
-base=`basename $ROOT`
-# Bundle stuff that will make restoring from backup easier
-if [ -n "$remuser" ] && [ -n "$remhost" ] && [ -n "$remrepo" ]; then
-    ssh $remuser@$remhost "install -d -m 700  $remrepo/btrfs-borg"
-    if [ -z ${archiveids+x} ]; then
-        borg list $repo > $HOME/borg-list.$DATE
-        chmod 400 $HOME/borg-list.$DATE
-        # Add immutable ACL to $btrfs_borg-list.$DATE?
-        scp $HOME/borg-list.$DATE \
-            $remuser@$remhost:$remrepo/btrfs-borg/borg-list.$DATE && \
-            rm $HOME/borg-list.$DATE
-    fi
-    ssh $remuser@$remhost "test -e $remrepo/btrfs-borg/$btrfs_borg"
-    if [ $? -eq 0 ]; then
-        ssh $remuser@$remhost "mv $remrepo/btrfs-borg/$btrfs_borg $remrepo/btrfs-borg/$btrfs_borg.old"
-    fi
-    install -m 500 "$0" $HOME/"$btrfs_borg.${DATE}" && \
-        scp $HOME/$btrfs_borg.$DATE \
-            $remuser@$remhost:$remrepo/btrfs-borg/$btrfs_borg && \
-        rm $HOME/"$btrfs_borg.${DATE}"
-    # \/ TODO \/
-    #install -d -m 400 $BTRFS-BORG.CSV $repo/btrfs-borg/$BTRFS-BORG.CSV
-    # TODO: make this iterate for multiple ROOTS
-    btrfs sub list $ROOT | ssh $remuser@$remhost "cat > $remrepo/btrfs-borg/subvolumes_of_$base"
-else
+# TODO Bundle stuff: Needs a better name?
+# Needs to do something smart with respect to $backup_unit
+bundle_stuff() {
     # Bundle stuff that will make restoring from backup easier
-    mkdir -p $repo/btrfs-borg && chown 700 $repo/btrfs-borg
-    if [ -f $repo/btrfs-borg/$btrfs_borg ]; then
-        mv $repo/btrfs-borg/$btrfs_borg $repo/btrfs-borg/$btrfs_borg.old
+    if [ -n "$remuser" ] && [ -n "$remhost" ] && [ -n "$remrepo" ]; then
+        ssh $remuser@$remhost "install -d -m 700  $remrepo/btrfs-borg"
+        if [ -z ${archiveids+x} ]; then
+            borg list $repo > $HOME/borg-list.$DATE
+            chmod 400 $HOME/borg-list.$DATE
+            # Add immutable ACL to $btrfs_borg-list.$DATE?
+            scp $HOME/borg-list.$DATE \
+                $remuser@$remhost:$remrepo/btrfs-borg/borg-list.$DATE && \
+                rm $HOME/borg-list.$DATE
+        fi
+        ssh $remuser@$remhost "test -e $remrepo/btrfs-borg/$btrfs_borg"
+        if [ $? -eq 0 ]; then
+            ssh $remuser@$remhost "mv $remrepo/btrfs-borg/$btrfs_borg $remrepo/btrfs-borg/$btrfs_borg.old"
+        fi
+        install -m 500 "$0" $HOME/"$btrfs_borg.${DATE}" && \
+            scp $HOME/$btrfs_borg.$DATE \
+                $remuser@$remhost:$remrepo/btrfs-borg/$btrfs_borg && \
+            rm $HOME/"$btrfs_borg.${DATE}"
+        # \/ TODO \/
+        #install -d -m 400 $BTRFS-BORG.CSV $repo/btrfs-borg/$BTRFS-BORG.CSV
+        # TODO: make this iterate for multiple ROOTS
+        btrfs sub list $ROOT | ssh $remuser@$remhost "cat > $remrepo/btrfs-borg/subvolumes_of_$base"
+    else
+        # Bundle stuff that will make restoring from backup easier
+        mkdir -p $repo/btrfs-borg && chown 700 $repo/btrfs-borg
+        if [ -f $repo/btrfs-borg/$btrfs_borg ]; then
+            mv $repo/btrfs-borg/$btrfs_borg $repo/btrfs-borg/$btrfs_borg.old
+        fi
+        install -d -m 500 "$0" $repo/btrfs-borg/$btrfs_borg
+        if [ -z ${archiveids+x} ]; then
+            borg list $repo > $repo/btrfs-borg/borg-list.$DATE
+            chmod 400 $repo/btrfs-borg/borg-list.$DATE
+            # Add immutable ACL to $btrfs_borg-list.$DATE?
+        fi
+        # \/ TODO \/
+        #install -d -m 400 $BTRFS-BORG.CSV $repo/btrfs-borg/$BTRFS-BORG.CSV
+        # TODO: make this iterate for multiple ROOTS
+        btrfs sub list $ROOT > $repo/btrfs-borg/subvolumes_of_$base
     fi
-    install -d -m 500 "$0" $repo/btrfs-borg/$btrfs_borg
-    if [ -z ${archiveids+x} ]; then
-        borg list $repo > $repo/btrfs-borg/borg-list.$DATE
-        chmod 400 $repo/btrfs-borg/borg-list.$DATE
-        # Add immutable ACL to $btrfs_borg-list.$DATE?
-    fi
-    # \/ TODO \/
-    #install -d -m 400 $BTRFS-BORG.CSV $repo/btrfs-borg/$BTRFS-BORG.CSV
-    # TODO: make this iterate for multiple ROOTS
-    btrfs sub list $ROOT > $repo/btrfs-borg/subvolumes_of_$base
-fi
+}
