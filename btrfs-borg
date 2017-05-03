@@ -19,10 +19,9 @@
 #           btrfs-progs, borg
 # Optional: ssh, gnupg || gpg
 
-# / was on /dev/sda1 during installation
-#UUID=0x000000-0000-0000-0000-000000000000 / btrfs defaults,subvol=@ 0 1
-# /\ duplicate this line, then the mountpoint and remove the subvol argument
-#UUID=0x000000-0000-0000-0000-000000000000 /btrfs-admin btrfs defaults 0 1
+# \/ Comment out this line after you've read the README.md \/
+echo "Please read README.md and then edit $0" ; exit 1
+# /\                                                       /\
 
 SNAPS='snapshots'   # $SNAPS is relative to $ROOT.  eg: /btrfs-admin/snapshots
                     # On my system it is a normal directory used to centralise
