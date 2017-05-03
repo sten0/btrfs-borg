@@ -13,7 +13,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 # General Public License for more details.
 #
-# Copyright (C) 2016  Nicholas D Steeves <nsteeves@gmail.com>
+# Copyright (C) 2016-2017  Nicholas D Steeves <nsteeves@gmail.com>
 # 
 # Requires: bash >=4.0, coreutils (specifically install, cut, tr, and stat),
 #           btrfs-progs, borg
