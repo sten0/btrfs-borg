@@ -1,0 +1,20 @@
+Maybe it would be better to split configuration into two parts.
+
+1. Backup units
+   * Take the existing csv and ods example
+   * Remove the pruning and retention portion
+   + If borg adds new features in the future, it should be possible to
+     simply add new columns.  The existing format will probably break
+     without this...
+   + Write a function that summarises everything that was backed up
+     At a high level!  This is distinct from the verbose manifest.
+2. Pruning units
+   - Loss of backups will occur if the user misconfigures these
+   * Disable pruning by default
+   + Write a function that simulates a pruning and says
+     something like "Targets for pruning: X, Y, Z"
+                    "Proceed?"
+   + Maybe this simulation functionality is already available upstream?
+     If it's not, open an issue/feature request.
+3. Write a script that generates both backup units and pruning units?
+   * Don't bother doing this until 1.0 is near!
