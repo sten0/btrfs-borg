@@ -15,15 +15,10 @@
 #
 # Copyright (C) 2016  Nicholas D Steeves <nsteeves@gmail.com>
 # 
-# Requires: "install" (usually from coreutils), btrfs-progs, borg
-# Optional: lxc (for now...plan to remove it later), ssh
+# Requires: bash >=4.0, coreutils (specifically install, cut, tr, and stat),
+#           btrfs-progs, borg
+# Optional: ssh, gnupg || gpg
 
-ROOT='/btrfs-admin' # Mountpoint for the whole volume
-                    # Btrfs-borg is designed to operate on named subvolumes.
-                    # If you do not already have this directory, create it
-                    # like this:
-                    # install -d -m 700 /btrfs-admin
-                    # Then, for Ubuntu do this to /etc/fstab:
 # / was on /dev/sda1 during installation
 #UUID=0x000000-0000-0000-0000-000000000000 / btrfs defaults,subvol=@ 0 1
 # /\ duplicate this line, then the mountpoint and remove the subvol argument
