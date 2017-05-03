@@ -74,7 +74,7 @@ weekly=4
 monthly=12
 yearly=5
                     # Configure verbosity for various borg subcommands.
-bverbo='--info'     # See borg(1) for details.
+verbos='--info'     # See borg(1) for details.
 archiveids=''       # Set to non-null to create copies of the output of
                     # borg-list for each invocation of btrfs-borg
                     #   - used to mitigate against attacks such as the
@@ -245,7 +245,7 @@ if [ -n "$remuser" ] && [ -n "$remhost" ] && [ -n "$remrepo" ]; then
 else
     stats=$repo/time_stats_$DATE
 fi
-borg create $bverbo -p --stats $extraargs -C $comp \
+borg create $verbos -p --stats $extraargs -C $comp \
      --exclude-caches \
      $repo::$lsubs$lcontains$loths-on-epoch+$DATE\.$comp \
      $subs $lxcsnaps $others
@@ -283,7 +283,7 @@ if [ -n "$monthly" ]; then prune="$prune -m $monthly"; fi
 if [ -n "$yearly" ]; then prune="$prune -y $yearly"; fi
 if [ -n "$prune" ]; then
     echo "Initiating pruning.  Please do not be alarmed if this takes forever"
-    (time borg prune $bverbo --stats $prune $repo 2>&3) \
+    (time borg prune $verbos --stats $prune $repo 2>&3) \
         3>&2 2> $stats
     echo -n "Pruning took "
     cat $stats
