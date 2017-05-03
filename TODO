@@ -144,3 +144,14 @@
   Pre-populated value should be two lines: one for @ and one for
   @home.  Write an example config for OpenSuSE users?
 * BORG-REPO needs to be part of BACKUP-UNIT
+
+* borg now provides it's own timekeeping. borg create -v -s -p prints
+   something like:
+   Time (start): Wed, 2017-05-03 19:30:31
+   Time (end):   Wed, 2017-05-03 19:42:45
+   Duration: 12 minutes 13.66 seconds
+   Number of files: 939480
+   ======================================
+   That's good enough for me.
+* Remove time-keeping wrapper around borg processes
+   
