@@ -1,0 +1,63 @@
+#!/bin/bash
+
+####    THE PLAN! :-D    ####
+
+BACKUP_UNITS='/btrfs-admin/Red,@stuff absolute_path_dir,/path/to/borg/repo      
+/btrfs-admin/Blue, @ @home /var/lib/lxc/my-container /non/btrfs/mount,          
+user@host:/path/to/borg/repo '
+
+# Future main()
+
+#iterates by line
+while IFS= read -r line; do
+    #breaks the line into comma-separated fields
+    while IFS=',' read f1 f2; do
+        echo -n "Field one:$f1    "
+        f2=`trim $f2`
+        echo "Field two:$f2"
+        # Breaks the second field into space-separated items
+        IFS=' '
+        for i in $f2; do
+            echo "    Preparing $i for backup"
+            echo "        Is $i a subvol?"
+            echo "            If not, is $i an LXC container?"
+            echo "                If yes, get its ROOTFS subvol"
+            echo "                If fail, treat $i as an OTHER"
+            echo "            If not, treat $i as an OTHER"
+            echo "        $i is not a subvol nor an LXC container"
+            echo "            Treating $i as an OTHER"
+            #TODO: alternatively, strongly consider doing this in a more modular way
+            # eg: one line of $BACKUP_UNITS becomes local __backup_unit
+            # __backup_unit gets passed to a helper function that breaks it up
+            # each function calls this helper function.
+            # main() would be just something like
+            # begin loop
+            # sanity $__backup_unit
+            # prepare $__backup_unit
+            # backup $__backup_unit
+            # cleanup $__backup_unit
+            # end loop
+        done
+        echo "Backing up backup unit: $line"
+        echo "using ROOT=$f1 and SRC objects=$f2"
+        done <<< "$line"
+done <<< "$BACKUP_UNITS"
+
+# Produces the following output:
+#
+# Field one:/btrfs-admin/Red    Field two:@stuff @more
+#     Preparing @stuff for backup
+#         Is @stuff a subvol?
+#     Preparing @more for backup
+#         Is @more a subvol?
+# Backing up backup unit /btrfs-admin/Red, @stuff @more
+# using ROOT=/btrfs-admin/Red and SRC objects=@stuff @more
+# Field one:/btrfs-admin/Blue    Field two:@ @home /var/lib/lxc/my-container
+#     Preparing @ for backup
+#         Is @ a subvol?
+#     Preparing @home for backup
+#         Is @home a subvol?
+#     Preparing /var/lib/lxc/my-container for backup
+#         Is /var/lib/lxc/my-container a subvol?
+# Backing up backup unit: /btrfs-admin/Blue, @ @home /var/lib/lxc/my-container
+# using ROOT=/btrfs-admin/Blue and SRC objects=@ @home /var/lib/lxc/my-container
