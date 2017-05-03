@@ -158,6 +158,10 @@ if [ -z ${notfound+x} ]; then
 fi
 
 # Other sanity checks
+# TODO: needs to iterate for new $BACKUP_SRCS
+# Other sanity checks.
+# CLEANUP -> move these to immediately before snapshot is taken
+# eg: pre_snapshot()
 if [ -d $ROOT/$snaps ]; then
     cd $ROOT/$snaps
     for i in $subs; do
@@ -171,11 +175,31 @@ if [ -d $ROOT/$snaps ]; then
         sync
     done
 else
-    echo "$ROOT/$snaps not found! $btrfs_borg cannot continue."
-    echo "Please mkdir $ROOT/$snaps and try again"
+    echo "$SNAPS not found! $COMMAND cannot continue."
+    echo "create $SNAPS?"
+    if [ -z ${NOTFOUND+x} ]; then
+        echo -n "Proceed? "
+        read choice
+        case "$choice" in
+            yes | y | Yes | YES )
+                echo "Creating $SNAPS"
+                install -d -m 700
+                break
+                ;;
+            no | n | No | NO )
+                echo "Exiting safely."
+                exit 1
+                ;;
+            * )
+                printf "Please answer yes or no\n\n"
+                ;;
+        esac
+    fi
     exit 1
 fi
 
+# PREP-STUFF.  TARGET FOR CLEANUP!
+# TODO ITERABLE!
 remuser=`echo $repo | cut -d@ -f1`
 remhost=`echo $repo | cut -d@ -f2 | cut -d: -f1`
 remrepo=`echo $repo | cut -d: -f2`
@@ -191,11 +215,12 @@ if [ $? -ne 0 ]; then
     cat <<EOF
 $repo/config not found!
 Is your backup target disk plugged in and mounted?
-Did you initialize the borg repository?
+Did you initialise the borg repository?
 EOF
     exit 1
 fi
 echo "Configuration found for $repo"
+# end pre_snapshot()
 
 # Prepare
 echo "Preparing..."
