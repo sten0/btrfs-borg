@@ -153,5 +153,6 @@
    Number of files: 939480
    ======================================
    That's good enough for me.
-* Remove time-keeping wrapper around borg processes
-   
+* Remove time-keeping wrapper around borg create
+   - NOTICE!  borg delete does not have time-keeping
+      ¿ File bug upstream ?  I don't imagine borg prune does either
