@@ -156,3 +156,11 @@
 * Remove time-keeping wrapper around borg create
    - NOTICE!  borg delete does not have time-keeping
       ¿ File bug upstream ?  I don't imagine borg prune does either
+
+* Borg issue #1022 "borg check does not (yet) extract [or verify] all
+   data chunks"
+   - So, for now, include a function like this:
+      # get archives as a space separated list 
+      for i in archive1 archive2 archive3; do
+      borg extract --dry-run $REPO::$i
+      done
