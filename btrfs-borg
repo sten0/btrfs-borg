@@ -74,7 +74,7 @@ weekly=4
 monthly=12
 yearly=5
                     # Configure verbosity for various borg subcommands.
-verbos='--info'     # See borg(1) for details.
+verbos='--info --show-rc'     # See borg(1) for details.
 archiveids=''       # Set to non-null to create copies of the output of
                     # borg-list for each invocation of btrfs-borg
                     #   - used to mitigate against attacks such as the
