@@ -1,5 +1,48 @@
 #!/bin/bash
 
+#####  PRIORITY!  CHANGE THE PLAN! #####
+cat <<EOF
+
+1. It should be broken up into at least one source file and a script.
+  ! the function definition file should not use #!/bin/bash.  It should
+    be non-executable and just define functions like this:
+    ping_me() {
+        ping localhost
+    }
+    this_is_true() {
+        true
+    }
+
+2.  btrfs-borg should be able to automatically find btrfs volume for
+any given path? (long-term goal)
+
+eg: it should be able to function as closely as possilble to borg
+itself, but with btrfs snapshotting and LXC
+
+btrfs-borg /first/path /second/path /some/borg::repo should be supported
+  * it should check to see if /some/path is an LXC container,
+    and if it is one it should create an archive named something
+    like `basename /some/path/container-name`_rootfs
+  ¿ Would it be better to require explicit argument types rather than
+    depending on a fixed argument order ? eg: -s/--source -r/--repo ?
+    - The idea is to allow LXC containers to be quiesced by shutting
+      them down, then snapshotted with lxc-snapshot.  Then, instead of
+      doing another btrfs snapshot, the --source becomes:
+      $SOURCE/snaps/`ls | tail -1 $SOURCE/snaps`  <- simple dir source
+    ! I think this might have to be the plan I go with, possibly by
+      default, because the alternative I've been only backs up the
+      container config if @/rootfs (or @home for unpriviledged Cs) is
+      part of the backup unit.  At the very least THIS NEEDS TO BE
+      DOCUMENTED.  eg: to back up a Cs rootfs AND config, the --quiesce
+      option must be used.
+      - this will necessitate adding a column to the backup unit csv
+        'just a boolean to quiesce any LXCs specified in the backup
+        unit
+
+EOF
+
+
+
 ####    THE PLAN! :-D    ####
 
 BACKUP_UNITS='/btrfs-admin/Red,@stuff absolute_path_dir,/path/to/borg/repo      
