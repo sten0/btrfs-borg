@@ -36,40 +36,35 @@ BACKUP_UNITS='/btrfs-admin/Red,@stuff absolute_path_dir,/path/to/borg/repo
 # TODO: I need to figure out how to retain BORG_PASSPHRASE in
 #       memory for no longer than root's ssh-agent's policy allows
 
-+# If you don't use btrfs on / ...
-+# Useful backups need both /var & /etc.  Please note that databases in /var
-+# won't be consistent unless you freeze or snapshot them somehow
-+# DISABLE FOR NOW!-> OTHERS=''           # If your /boot is on a separate partition, /boot needs to
-+                                         # be in the list of $OTHERS, or your backup won't be able
-+                                         # to restore a bootable system!  It might also be a good
-+                                         # idea to backup the UEFI ESP ;-)
-+# TODO: FIXABLE IN PROGRESS using my generic is_btrfs() check!  Finish implementing functionality
-+# TODO: test if each $OTHERS is an empty directory, and try mounting it if it is?
+# If you don't use btrfs on / ...
+# Useful backups need both /var & /etc.  Please note that databases in /var
+# won't be consistent unless you freeze or snapshot them somehow
+# DISABLE FOR NOW!-> OTHERS=''           # If your /boot is on a separate partition, /boot needs to
+                                         # be in the list of $OTHERS, or your backup won't be able
+                                         # to restore a bootable system!  It might also be a good
+                                         # idea to backup the UEFI ESP ;-)
+# TODO: FIXABLE IN PROGRESS using my generic is_btrfs() check!  Finish implementing functionality
+# TODO: test if each $OTHERS is an empty directory, and try mounting it if it is?
 
-+# TODO: move to README or manpage Seconds since epoch will allow you
-+# to make backups just about as often as possible, unless you
-+# theoretically have a *really* fast system, and *really* fast disks,
-+# and no changed files.  I chose not to use a format like
-+# 2016-01-12-17:03:09 because borg list <REPO> already outputs this
-+# format in the right-hand column, and someone might find
-+# machine-readable date stamps useful for his/her custom pruning
-+# script.  P.S. seconds since epoch is cool ;-) Additionally, some
-+# filesystems don't handle the colon ":" very well and btrfs-borg
-+# bundles a copy of itself on your backup drive.  This function will
-+# fail if a user backups up to one of these lesser filesystems.
-+# Finally, it's shorter than the ISO format (date, time, timezone) yet
-+# provides the same information.
-+
-+# TODO: find out how often collisions will occur with "uuid | cut -d-
-+# -f1".  If it's not terrible then suggest it as a viable alternative
-+# to `date +%s`
+# TODO: move to README or manpage Seconds since epoch will allow you
+# to make backups just about as often as possible, unless you
+# theoretically have a *really* fast system, and *really* fast disks,
+# and no changed files.  I chose not to use a format like
+# 2016-01-12-17:03:09 because borg list <REPO> already outputs this
+# format in the right-hand column, and someone might find
+# machine-readable date stamps useful for his/her custom pruning
+# script.  P.S. seconds since epoch is cool ;-) Additionally, some
+# filesystems don't handle the colon ":" very well and btrfs-borg
+# bundles a copy of itself on your backup drive.  This function will
+# fail if a user backups up to one of these lesser filesystems.
+# Finally, it's shorter than the ISO format (date, time, timezone) yet
+# provides the same information.
+
+# TODO: find out how often collisions will occur with "uuid | cut -d-
+# -f1".  If it's not terrible then suggest it as a viable alternative
+# to `date +%s`
 
 Finally root is required to remove subvolumes, unless
- "user_subvol_rm_allowed" is specified for the volume in /etc/fstab.
- +that said, I firmly maintain that normal user subvolume creation
- +should be avoided for the foreseeable future.
-
--for c in install btrfs borg; do
-+# Check for necessary requirements
-+for c in cut install btrfs borg stat; do
-
+"user_subvol_rm_allowed" is specified for the volume in /etc/fstab.
+that said, I firmly maintain that normal user subvolume creation
+should be avoided for the foreseeable future.
