@@ -1,8 +1,8 @@
 #!/bin/bash
 #
-# btrfs-borg makes and backs up a list of btrfs snapshotted subvolumes using
-# Borg.  It supports a list of other (probably) non-btrfs directory sources,
-# and 1 second granularity of backups.
+# btrfs-borg makes and backs up a list of btrfs snapshotted subvolumes
+# using Borg.  It supports a list of other (probably) non-btrfs
+# directory sources, and 1 second granularity of backups.
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public
@@ -14,74 +14,14 @@
 # General Public License for more details.
 #
 # Copyright (C) 2016-2017  Nicholas D Steeves <nsteeves@gmail.com>
-# 
-# Requires: bash >=4.0, coreutils (specifically install, cut, tr, and stat),
-#           btrfs-progs, borg
+#
+# Requires: bash >=4.0, coreutils (specifically install, cut, tr,
+#           and stat), btrfs-progs, borg
 # Optional: ssh, gnupg || gpg
 
-# \/ Comment out this line after you've read the README.md \/
-echo "Please read README.md and then edit $0" ; exit 1
-# /\                                                       /\
+verbos='--info --show-rc'    # See borg(1) for details.
 
-snaps='snapshots'   # $snaps is relative to $ROOT.  eg: /btrfs-admin/snapshots
-                    # On my system it is a normal directory used to centralise
-                    # snapshots.
-
-subs='@home rootfs' # $subs are also relative to $ROOT.  Use @home and @ for
-                    # Ubuntu, and use home and rootfs for Fedora.
-                    # Back up user data before system data, just in case.
-
-lxcdir='/var/lib/lxc'
-containers='my-LXC-container my-other-LXC-container'
-
-    # If you have LXC containers on btrfs subvolumes beneath $ROOT,
-    # that are managed by LXC's btrfs backend, then list them here in
-    # the same format you would pass to lxc-stop -n $CONTAINER-NAME.
-    # Please insure that they can be safely stopped without data loss,
-    # because at this point in time (2016-11-12) LXC 2.x containers
-    # need to be stopped before they can be snapshotted.  Leave empty
-    # to skip LXC container backup.  If you leave it empty and your
-    # LXC containers are somewhere inside one of the $subs then the
-    # containers will be backed up without stopping them.
-    # If your LXC containers are on their own subvolumes, but are not
-    # listed here, and their subvolumes are not listed in subs,
-    # they will not be backed up!
-
-# TODO!  Contact someone who is intimately familiar with LXC+btrfs
-# and get his/her opinion on the best way to backup LXC containers
-# with btrfs backend.  eg: lxc snapshot vs directly using btrfs snapshot
-
-repo='/media/usb/Cuboid_Borg'
-#repo='user@host:/path/to/borg/repo'  # example for ssh-connected repo
-
-comp='lz4'          # see borg(1) section on -C COMPRESSION
-
-# If you don't use btrfs on /; useful backups need both /var & /etc
-# Please note that databases in /var won't be consistent unless you freeze
-# or snapshot them somehow
-others=''           # If your /boot is on a separate partition, /boot needs to
-                    # be in the list of $others, or your backup won't be able
-                    # to restore a bootable system!  It might also be a good
-                    # idea to backup the UEFI ESP ;-)
-
-# TODO: test if each $others is an empty directory, and try mounting it if
-# it is?
-
-                    # Comment out any of the following time periods to disable
-#hourly=24          # Disable hourly, because I backup once or twice a week
-daily=7
-weekly=4
-monthly=12
-yearly=5
-                    # Configure verbosity for various borg subcommands.
-verbos='--info --show-rc'     # See borg(1) for details.
-archiveids=''       # Set to non-null to create copies of the output of
-                    # borg-list for each invocation of btrfs-borg
-                    #   - used to mitigate against attacks such as the
-                    # "Pre-1.0.9 manifest spoofing vulnerability".
-                    # Please note that this will expose the output of borg-list
-                    # To any user who has root access to the drive where this
-                    # file is stored.
+### TODO -- Build manifests in a better way...
 
 # On my system, these are subvolumes that won't be backed up;
 # however, I'd like to keep a list of their contents.
@@ -91,6 +31,9 @@ echo "Manifests have not been configured, please edit $0"
 #cd /home/triage && find > /home/backups/triage.manifest
 #echo "Building manifests"
 
+### TODO -- Find out why CACHEDIR.TAG doesn't recurse
+### eg: why /var/cache/pbuilder/{base.cow,testing.cow} are traversed
+###     when /var/cache/pbuilder/CACHEDIR.TAG exists
 # Uncomment this to exclude from the backup directories that
 # contain a file named CACHEDIR.TAG; these can be created like this:
 # touch /home/*/.cache/CACHEDIR.TAG
@@ -111,7 +54,7 @@ export DATE=`date +%s`
 # Sanity checks
 # Beginning with requirements
 if [ "`id -u`" -ne 0 ]; then
-    cat <<EOF
+        cat <<EOF
 Warning, normal user Detected!
 Please run with superuser permissions.
 
@@ -127,7 +70,7 @@ should be avoided for the foreseeable future.
 EOF
     notfound=1
 fi
-# Check for necessary requirements
+# Check for necessary requirements                                      
 for c in cut install btrfs borg stat; do
     type $c >/dev/null 2>&1
     if [ $? -ne 0 ]; then
@@ -139,22 +82,23 @@ if [ `echo -n $BASH_VERSION | cut -d. -f1` -lt 4 ]; then
     echo "Found bash version $BASH_VERSION."
     echo "Exiting, because >=4 is needed."
     exit 1
-if [ -z ${notfound+x} ]; then
-    echo -n "Proceed? "
-    read choice
-    case "$choice" in
-        yes | y | Yes | YES )
-            echo "Proceeding despite danger."
-            break
-            ;;
-        no | n | No | NO )
-            echo "Exiting safely."
-            exit 1
-            ;;
-        * )
-            printf "Please answer yes or no\n\n"
-            ;;
-    esac
+    if [ -z ${notfound+x} ]; then
+        echo -n "Proceed? "
+        read choice
+        case "$choice" in
+            yes | y | Yes | YES )
+                echo "Proceeding despite danger."
+                break
+                ;;
+            no | n | No | NO )
+                echo "Exiting safely."
+                exit 1
+                ;;
+            * )
+                printf "Please answer yes or no\n\n"
+                ;;
+        esac
+    fi
 fi
 
 # Other sanity checks
@@ -167,8 +111,9 @@ if [ -d $ROOT/$snaps ]; then
     for i in $subs; do
         if [ -d $i ]; then
             AGE=`stat -c %Y $i`
-            echo "Moving existing snapshot of $i out of the way to $i@$AGE"
-            mv $i $i@$AGE
+                        echo "Moving existing snapshot of $i out of the way to      
+$i@$AGE"
+                        mv $i $i@$AGE
         fi
         sync
         btrfs sub sync $ROOT
@@ -213,215 +158,12 @@ elif [ ! -f $repo/config ]; then
     false
 fi
 if [ $? -ne 0 ]; then
-    cat <<EOF
+        cat <<EOF
 $repo/config not found!
 Is your backup target disk plugged in and mounted?
 Did you initialise the borg repository?
 EOF
-    exit 1
+        exit 1
 fi
 echo "Configuration found for $repo"
 # end pre_snapshot()
-
-trim() {
-    local string="$*"
-    string="${string#"${string%%[![:space:]]*}"}"
-    string="${string%"${string##*[![:space:]]}"}"
-    echo -n "$string"
-}
-
-is_btrfs() {
-    if [ `stat -f --format=%T $1` == 'btrfs' ] && \
-       [ `stat --format=%i $1` -eq 256 ]; then
-        echo "$1 is a btrfs subvolume"
-    else
-        echo "$1 is not a btrfs subvolume"
-        false
-    fi
-}
-
-is_lxc() {
-    echo "check for existence of $1/config?"
-    echo "avoid using grep!"
-    echo "grep $1/config for REGEX lxc.rootfs.backend.*btrfs"
-}
-get_lxc_rootfs() {
-    # from main(), use this function to test and get an LXC backup object
-    #at this point $1=$ROOT from $f1 in main() eg: /btrfs-admin/SanDisk
-    #at this point $2="/var/lib/lxc/my-container" from $f2 in main()
-    is_btrfs $1/$2/rootfs
-    ### Test for failure, echo MISCONFIGURED BTRFS-BORG and cleanup
-    if [ $? -eq 0 ]; then
-        #return the full path of subvol to snapshot
-        echo -n "$1/$2/rootfs"
-    else
-        false
-    fi
-}
-
-# TODO: RENAME AND REWORK THIS FUNCTION
-# LOCAL VARS
-lxc_start_stop() {
-    if [ -n "$containers" ]; then
-        unset lxcsnaps
-        for i in $containers; do
-            lxc-stop -n $i
-            lxc-snapshot -n $i
-            sync
-            btrfs sub sync $lxcdir
-            sync
-            lxc-start -n $i
-            if [ -z "$lxcsnaps" ]; then
-                lxcsnaps="`btrfs sub list $lxcdir | grep $i | tail -n1 | awk '{print $NF}'`"
-            else
-                lxcsnaps="$lxcsnaps `btrfs sub list $lxcdir | grep $i | tail -n1 | awk '{print $NF}'`"
-            fi
-        done
-        lcontains="_"
-        lcontains="$lcontains`echo $containers | tr ' ' '_'`"
-    fi
-}
-
-# TODO: Each function needs a comment that documents what arguments
-# it expects and what output it produces.
-# LOCAL VARS
-prepare () {
-    echo "Preparing..."
-    sync
-    btrfs sub sync $ROOT
-    sync
-    for i in $subs; do
-        btrfs sub snap -r $ROOT/$i $ROOT/$snaps/$i
-        sync
-        btrfs sub sync $ROOT/$snaps/$i
-        sync
-    done
-    lsubs=`echo $subs | tr ' ' '_'`
-    if [ -n "$others" ]; then
-        dirs=""
-        for i in $others; do
-            dirs="$dirs `basename $i`"
-        done
-        loths="_"
-        loths="$loths`echo $dirs | tr ' ' '_'`"
-    fi
-}
-
-# TODO: rename this function?  LOCAL VARS
-do_backup() {
-    echo "Doing backup (TODO: Needs to take vars from \$backup_unit"
-    cd $ROOT/$snaps
-    if [ -n "$remuser" ] && [ -n "$remhost" ] && [ -n "$remrepo" ]; then
-        stats=$HOME/time_stats_$DATE
-    else
-        stats=$repo/time_stats_$DATE
-    fi
-borg create $verbos -p --stats $extraargs -C $comp \
-     --exclude-caches \
-     $repo::$lsubs$lcontains$loths-on-epoch+$DATE\.$comp \
-     $subs $lxcsnaps $others
-}
-
-# Cleanup
-# Must always clean up snapshots by default.
-#
-# TODO ASAP!!: remove LXC snapshot generated by $btrfs_borg
-#   |-> refer lxc_start_stop()
-# something like:
-#
-#for i in $containers; do
-#      lxc-snapshot -L -n $i
-#      EXPIRE="`lxc-snapshot -L -n $i | tail -1 | awk '{print $1}'`"
-#      echo "Removing $EXPIRE"
-#      lxc-snapshot -n get-transmissions -d $EXPIRE
-#done
-cleanup() {
-    # TODO LOCAL VARS
-    echo "Cleaning up Snapshots"
-    (time (
-            cd $ROOT/$snaps
-            btrfs sub delete -c $subs
-            echo "Syncing...please be patient, this could be slow"
-            sync
-            btrfs sub sync $ROOT
-            sync)
-     2>&3) 3>&2 2> $stats
-    echo -n "Cleanup took "
-    cat $stats
-    echo
-}
-
-# Prune TODO: LOCAL VARS from backup_unit
-# ESSENTIAL!
-# BACKUP_UNITS='/btrfs-admin/Red, @stuff @more
-# /btrfs-admin/Blue, @ @home /var/lib/lxc/my-container '
-# Means my naming scheme needs to be:
-# get basename of $ROOT
-#     if basename is /btrfs-admin, then do nothing
-#   else, BS=Blue
-# $HOSTNAME-$BS-@stuff_@more is the creation and pruning prefix
-# True-Blue-@_@home_my-container_$DATE
-prune() {
-    unset prune
-    if [ -n "$hourly" ]; then prune="-H $hourly"; fi
-    if [ -n "$daily" ]; then prune="$prune -d $daily"; fi
-    if [ -n "$weekly" ]; then prune="$prune -w $weekly"; fi
-    if [ -n "$monthly" ]; then prune="$prune -m $monthly"; fi
-    if [ -n "$yearly" ]; then prune="$prune -y $yearly"; fi
-    if [ -n "$prune" ]; then
-        echo "Initiating pruning.  Please do not be alarmed if this takes forever"
-        (time borg prune $verbos --stats $prune $repo 2>&3) \
-            3>&2 2> $stats
-        echo -n "Pruning took "
-        cat $stats
-        echo
-        rm $stats
-    fi
-    # TODO: do something about \/ THIS \/
-    base=`basename $ROOT`
-}
-
-# TODO Bundle stuff: Needs a better name?
-# Needs to do something smart with respect to $backup_unit
-bundle_stuff() {
-    # Bundle stuff that will make restoring from backup easier
-    if [ -n "$remuser" ] && [ -n "$remhost" ] && [ -n "$remrepo" ]; then
-        ssh $remuser@$remhost "install -d -m 700  $remrepo/btrfs-borg"
-        if [ -z ${archiveids+x} ]; then
-            borg list $repo > $HOME/borg-list.$DATE
-            chmod 400 $HOME/borg-list.$DATE
-            # Add immutable ACL to $btrfs_borg-list.$DATE?
-            scp $HOME/borg-list.$DATE \
-                $remuser@$remhost:$remrepo/btrfs-borg/borg-list.$DATE && \
-                rm $HOME/borg-list.$DATE
-        fi
-        ssh $remuser@$remhost "test -e $remrepo/btrfs-borg/$btrfs_borg"
-        if [ $? -eq 0 ]; then
-            ssh $remuser@$remhost "mv $remrepo/btrfs-borg/$btrfs_borg $remrepo/btrfs-borg/$btrfs_borg.old"
-        fi
-        install -m 500 "$0" $HOME/"$btrfs_borg.${DATE}" && \
-            scp $HOME/$btrfs_borg.$DATE \
-                $remuser@$remhost:$remrepo/btrfs-borg/$btrfs_borg && \
-            rm $HOME/"$btrfs_borg.${DATE}"
-        # \/ TODO \/
-        #install -d -m 400 $BTRFS-BORG.CSV $repo/btrfs-borg/$BTRFS-BORG.CSV
-        # TODO: make this iterate for multiple ROOTS
-        btrfs sub list $ROOT | ssh $remuser@$remhost "cat > $remrepo/btrfs-borg/subvolumes_of_$base"
-    else
-        # Bundle stuff that will make restoring from backup easier
-        mkdir -p $repo/btrfs-borg && chown 700 $repo/btrfs-borg
-        if [ -f $repo/btrfs-borg/$btrfs_borg ]; then
-            mv $repo/btrfs-borg/$btrfs_borg $repo/btrfs-borg/$btrfs_borg.old
-        fi
-        install -d -m 500 "$0" $repo/btrfs-borg/$btrfs_borg
-        if [ -z ${archiveids+x} ]; then
-            borg list $repo > $repo/btrfs-borg/borg-list.$DATE
-            chmod 400 $repo/btrfs-borg/borg-list.$DATE
-            # Add immutable ACL to $btrfs_borg-list.$DATE?
-        fi
-        # \/ TODO \/
-        #install -d -m 400 $BTRFS-BORG.CSV $repo/btrfs-borg/$BTRFS-BORG.CSV
-        # TODO: make this iterate for multiple ROOTS
-        btrfs sub list $ROOT > $repo/btrfs-borg/subvolumes_of_$base
-    fi
-}
