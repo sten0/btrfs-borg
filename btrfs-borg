@@ -111,9 +111,9 @@ if [ -d $ROOT/$snaps ]; then
     for i in $subs; do
         if [ -d $i ]; then
             AGE=`stat -c %Y $i`
-                        echo "Moving existing snapshot of $i out of the way to      
+            echo "Moving existing snapshot of $i out of the way to      
 $i@$AGE"
-                        mv $i $i@$AGE
+            mv $i $i@$AGE
         fi
         sync
         btrfs sub sync $ROOT
