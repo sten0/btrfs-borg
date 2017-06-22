@@ -18,32 +18,24 @@
 # Requires: bash >=4.0, coreutils (specifically install, cut, tr,
 #           and stat), btrfs-progs, borg
 # Optional: ssh, gnupg || gpg
+btrfs-borg-version=0.70
 
-verbos='--info --show-rc'    # See borg(1) for details.
+source /etc/default/btrfs-borg
+if [ $CONFIG_VERSION -ne ${btrfs-borg-version%.*} ]; then
+    echo "Version mismatch"
+    echo "btrfs-borg version $VERSION"
+    echo "config version $CONFIG_VERSION"
+    exit 3
+else
+    echo "Using config version $CONFIG_VERSION"
+fi
 
-### TODO -- Build manifests in a better way...
+echo "CONFIGURE CSV VERSION CHECK"
+exit 1
+if [ $CSV_VERSION -ne ${btrfs-borg-version%.*} ]; then
+    exit 3
+fi
 
-# On my system, these are subvolumes that won't be backed up;
-# however, I'd like to keep a list of their contents.
-# Make sure that the manifests are put on a subvolume that will be backed up.
-echo "Manifests have not been configured, please edit $0"
-#cd /usr/src && find > /home/backups/src.manifest
-#cd /home/triage && find > /home/backups/triage.manifest
-#echo "Building manifests"
-
-### TODO -- Find out why CACHEDIR.TAG doesn't recurse
-### eg: why /var/cache/pbuilder/{base.cow,testing.cow} are traversed
-###     when /var/cache/pbuilder/CACHEDIR.TAG exists
-# Uncomment this to exclude from the backup directories that
-# contain a file named CACHEDIR.TAG; these can be created like this:
-# touch /home/*/.cache/CACHEDIR.TAG
-
-# extraargs='--exclude-caches'
-
-
-##############################################################################
-####################### Configurable portion ends here #######################
-##############################################################################
 
 # TODO: cleanup, iterate
 export ROOT
