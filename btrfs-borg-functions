@@ -19,6 +19,74 @@ trim() {
     echo -n "$string"
 }
 
+# Other sanity checks
+# TODO: needs to iterate for new $backup_srcs
+# Other sanity checks.
+# CLEANUP -> move these to immediately before snapshot is taken
+pre_snapshot() {
+if [ -d $ROOT/$snaps ]; then
+    cd $ROOT/$snaps
+    for i in $subs; do
+        if [ -d $i ]; then
+            AGE=`stat -c %Y $i`
+            echo "Moving existing snapshot of $i out of the way to
+$i@$AGE"
+            mv $i $i@$AGE
+        fi
+        sync
+        btrfs sub sync $ROOT
+        sync
+    done
+else
+    echo "$SNAPS not found! $COMMAND cannot continue."
+    echo "create $SNAPS?"
+    if [ -z ${NOTFOUND+x} ]; then
+        echo -n "Proceed? "
+        read choice
+        case "$choice" in
+            yes | y | Yes | YES )
+                echo "Creating $SNAPS"
+                install -d -m 700
+                break
+                ;;
+            no | n | No | NO )
+                echo "Exiting safely."
+                exit 1
+                ;;
+            * )
+                printf "Please answer yes or no\n\n"
+                ;;
+        esac
+    fi
+    exit 1
+fi
+
+# PREP-STUFF.  TARGET FOR CLEANUP!
+# TODO: Make it a function
+# LOCAL VARS
+remuser=`echo $repo | cut -d@ -f1`
+remhost=`echo $repo | cut -d@ -f2 | cut -d: -f1`
+remrepo=`echo $repo | cut -d: -f2`
+
+# TODO: non-iterable sanity checks TARGET FOR CLEANUP!
+# Check for existence of intended borg REPO
+if [ -n "$remuser" ] && [ -n "$remhost" ] && [ -n "$remrepo" ]; then
+    ssh $remuser@$remhost "test -e $remrepo/config"
+elif [ ! -f $repo/config ]; then
+    false
+fi
+if [ $? -ne 0 ]; then
+    cat <<EOF
+$repo/config not found!
+Is your backup target disk plugged in and mounted?
+Did you initialise the borg repository?
+EOF
+    exit 1
+fi
+echo "Configuration found for $repo"
+}
+# end pre_snapshot()
+
 is_btrfs() {
     if [ `stat -f --format=%T $1` == 'btrfs' ] && \
        [ `stat --format=%i $1` -eq 256 ]; then
