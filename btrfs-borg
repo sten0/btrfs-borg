@@ -23,7 +23,7 @@ btrfs-borg-version=0.70
 # Turn this on for now, for debugging
 set -u
 
-btrfs_borg="`basename $0`"
+btrfs_borg="$(basename $0)"
 
 source /etc/default/btrfs-borg
 if [ $CONFIG_VERSION -ne ${btrfs-borg-version%.*} ]; then
@@ -43,7 +43,7 @@ fi
 
 # Sanity checks
 # Beginning with requirements
-if [ "`id -u`" -ne 0 ]; then
+if [ "$(id -u)" -ne 0 ]; then
         cat <<EOF
 Warning, normal user Detected!
 Please run with superuser permissions.
@@ -68,25 +68,27 @@ for c in cut install btrfs borg stat; do
        notfound=1
     fi
 done
-if [ `echo -n $BASH_VERSION | cut -d. -f1` -lt 4 ]; then
+if [ $(echo -n $BASH_VERSION | cut -d. -f1) -lt 4 ]; then
     echo "Found bash version $BASH_VERSION."
     echo "Exiting, because >=4 is needed."
     exit 1
     if [ -z ${notfound+x} ]; then
         echo -n "Proceed? (Please type no)"
-        read choice
-        case "$choice" in
-            yes | y | Yes | YES )
-                echo "Proceeding despite danger."
-                break
-                ;;
-            no | n | No | NO )
-                echo "Exiting safely."
-                exit 1
-                ;;
-            * )
-                printf "Please answer yes or no\n\n"
-                ;;
-        esac
+        while true; do
+              read choice
+              case "$choice" in
+                  yes | y | Yes | YES )
+                      echo "Proceeding despite danger."
+                      break
+                      ;;
+                  no | n | No | NO )
+                      echo "Exiting safely."
+                      exit 1
+                      ;;
+                  * )
+                      printf "Please answer yes or no\n\n"
+                      ;;
+              esac
+        done
     fi
 fi
