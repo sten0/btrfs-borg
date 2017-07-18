@@ -92,6 +92,14 @@ echo "Configuration found for $repo"
 # end pre_snapshot()
 
 is_btrfs() {
+    if [ "$(stat -f --format=%T $1)" == 'btrfs' ]; then
+	echo "$1 is a btrfs volume"
+    else
+	echo "$1 is not a btrfs volume"
+    fi
+}
+
+is_subvolume() {
     if [ "$(stat -f --format=%T $1)" == 'btrfs' ] && \
        [ "$(stat --format=%i $1)" -eq 256 ]; then
         echo "$1 is a btrfs subvolume"
