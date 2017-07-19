@@ -14,6 +14,9 @@ extra-safe
 ** Make manifest support silent and opt-in? Drop it?
    ¿ or wait for a user to file a bug complaining about this ?
 ** Document the /btrfs-admin/device_or_volume0 convention?
+** The snapshot function must be able to autodetect parent volume.
+    - eg: snapshot @rootfs and @home from Blue, and @huge_subvol from Red
+      in the same backup unit
 ** Shift lots of configuration into new btrfs-borg.csv; adapt the script to read
   from this file; allow the location of this config file to be defined
     - Include example btrfs-borg.csv
