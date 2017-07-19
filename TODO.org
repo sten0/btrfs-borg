@@ -30,9 +30,13 @@ extra-safe
     - Shift many long inline comments into README.md
     - Break things into sections (eg: Introduction, Recommendations,
       Configuration)
-    - Section on backing up LX Containers: a) unprivileged containers are
+    - Section on backing up LX Containers?: a) unprivileged containers are
       assumed to not be on their own subvolumes, therefore they are assumed to
-      be included in a snapshot of a subvolume such as @home.  b) 
+      be included in a snapshot of a subvolume such as @home.
+    - Read @18F's https://open-source-guide.18f.gov/making-readmes-readable/
+    - Read @PurpleBooth’s https://gist.github.com/PurpleBooth/109311bb0361f32d87a2
+    - Both of these links are from: https://opensource.guide/starting-a-project/#writing-your-contributing-guidelines
+    - Write a better README!
 ** Create knob for btrfs snapshot of LXC containers, without using
   lxc-snapshot, which shuts them down.  This is desirable for all but
   database workloads:
@@ -143,8 +147,6 @@ stuff, umask stuff, IFS stuff, etc.
         = $SERVER sshes into $HOST, runs btrfs-borg,
           and this runs backup and sshes into $SERVER
 ** More thoroughly test SSH support.
-
-
 ** Clean up LXC snapshots by default
     TODO: We now clean up snapshots by default...
            Make this configurable in the future
@@ -157,7 +159,6 @@ stuff, umask stuff, IFS stuff, etc.
           echo "Removing $EXPIRE"
           lxc-snapshot -n get-transmissions -d $EXPIRE
     done
-
 ** Add optional support for backing up multiple hosts to the same repo
   ...which means more efficient deduplication!
    - Gabor's suggestion :-)
@@ -172,6 +173,12 @@ stuff, umask stuff, IFS stuff, etc.
 
 * Long Term
 ** When btrfs-borg is feature-complete, tag 1.0
+** Write CONTRIBUTING.md
+   - https://opensource.guide/starting-a-project/#writing-your-contributing-guidelines
+   - https://github.com/nayafia/contributing-template/blob/master/CONTRIBUTING-template.md 
+   - http://mozillascience.github.io/working-open-workshop/contributing/ 
+   - Link to your CONTRIBUTING file from your README
+   - Link to CODE_OF_CONDUCT from either CONTRIBUTING or README
 ** Store the partition and subvolume layout,
   ¿ and also strong checksums of the generated files as:
     `hostname`_partitions_subvolume-layout as a tiny borg-archive ?
