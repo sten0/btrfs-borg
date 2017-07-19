@@ -1,4 +1,9 @@
 * Short Term
+** VERY IMPORTANT!
+Insure that any special characters like *,?,(,),!,etc. are treated as
+literals.  These characters should already be illegal as subvolume
+names, but because this script is run as root it's better to be
+extra-safe
 ** Goal: allow separation of configuration from script
    - use a CSV?
    ¿ provide example script for populating the CSV ?
@@ -101,6 +106,9 @@
       for i in archive1 archive2 archive3; do
       borg extract --dry-run $REPO::$i
       done
+** Important
+Add extra safety logic at the beginning of the script.  Unsetting
+stuff, umask stuff, IFS stuff, etc.
 
 
 * ALTERNATE PLAN
