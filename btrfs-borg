@@ -41,7 +41,6 @@ if [ $CSV_VERSION -ne ${btrfs-borg-version%.*} ]; then
 fi
 
 # Sanity checks
-# Beginning with requirements
 if [ "$(id -u)" -ne 0 ]; then
     cat <<EOF
 Warning, normal user Detected!
@@ -54,12 +53,13 @@ will suffer with more than ~300 subvolumes.
 
 Finally root is required to remove subvolumes, unless
 "user_subvol_rm_allowed" is specified for the volume in /etc/fstab.
-that said, I firmly maintain that normal user subvolume creation
-should be avoided for the foreseeable future.
+That said, I firmly maintain that normal user subvolume creation and
+deletion should be avoided for the foreseeable future.
 EOF
+
     notfound=1
 fi
-# Check for necessary requirements
+# Check for requirements
 for c in cut install btrfs borg stat; do
     type $c >/dev/null 2>&1
     if [ $? -ne 0 ]; then
