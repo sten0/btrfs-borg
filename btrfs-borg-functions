@@ -19,10 +19,32 @@
 # parameter: string, taken from a field of a CSV
 # TODO: test to see if this is truly necessary, and if not, drop it
 trim() {
-    local string="$*"
+    string="$*" ; local string
     string="${string#"${string%%[![:space:]]*}"}"
     string="${string%"${string##*[![:space:]]}"}"
-    echo -n "$string"
+    printf "$string"
+}
+
+# function: returns a space-separated list of btrfs devices,
+#           with one device per volume (eg: /dev/sda1)
+# parameter: NA
+get_uniq_devs() {
+    findmnt --types btrfs --noheadings --output "SOURCE" --nofsroot \
+            --noheading | sort | uniq | tr '\n' ' '
+}
+
+# function: gets volume LABEL if possible and returns it, otherwise
+#           returns basename of parameter
+# parameter: takes one block device or partition (eg: /dev/sda1)
+try_get_label() {
+    device=$(blkid | grep $1) ; local device
+    label=${device##*\ LABEL=}
+    label=${label%%\ *} ; local label
+    if [ ! -z "$label" ]; then
+        printf "$label"
+    else
+        printf "${basename $device}"
+    fi
 }
 
 # function: Other sanity checks
@@ -31,8 +53,8 @@ trim() {
 #       Other sanity checks.
 #       CLEANUP -> move these to immediately before snapshot is taken
 pre_snapshot() {
-    if [ -d "$ROOT/$snaps" ]; then
-        cd "$ROOT/$snaps"
+    if [ -d "$ROOT/$SNAPS_DIR" ]; then
+        cd "$ROOT/$SNAPS_DIR"
         for i in $subs; do
             if [ -d "$i" ]; then
                 AGE=$(stat -c %Y "$i")
@@ -48,15 +70,19 @@ $i@$AGE"
             sync
         done
     else
-        echo "$SNAPS not found! $COMMAND cannot continue."
-        echo "create $SNAPS?"
+        cat <<EOF
+REPLACE THE FOLLOWING SECTION WITH MKDIR -P...ALWAYS WORKS, AND
+ALWAYS SILENT ;-)
+EOF
+        echo "$ROOT/$SNAPS_DIR not found! $COMMAND cannot continue."
+        echo "create $ROOT/$SNAPS_DIR?"
         if [ -z ${NOTFOUND+x} ]; then
             echo -n "Proceed? "
             while true; do
                 read choice
                 case "$choice" in
                     yes | y | Yes | YES )
-                        echo "Creating $SNAPS"
+                        echo "Creating $SNAPS_DIR"
                         install -d -m 700
                         break
                         ;;
@@ -148,6 +174,29 @@ get_lxc_rootfs() {
     else
         false
     fi
+    cat <<EOF
+OR DO IT THIS WAY:
+
+sudo btrfs sub list /btrfs-admin/Blue
+PRINTS:
+
+ID 257 gen 927355 top level 5 path @rootfs
+ID 282 gen 927355 top level 5 path @home
+ID 335 gen 695496 top level 257 path @rootfs/srv
+ID 511 gen 927351 top level 257 path @rootfs/var/lib/lxc/my-container/rootfs
+
+Then, from inside /btrfs-admin/Blue, do:
+
+btrfs sub snap -r @rootfs/var/lib/lxc/my-container/rootfs \
+    snapshots/my-container
+
+This seems like a slightly better style than:
+  from inside /btrfs-admin/Blue/snapshots, do:
+
+btrfs sub snap -r ../@rootfs/var/lib/lxc/my-container/rootfs \
+    snapshots/my-container
+
+EOF
 }
 
 # function:
@@ -208,9 +257,9 @@ prepare () {
     btrfs sub sync "$ROOT"
     sync
     for i in $subs; do
-        btrfs sub snap -r "$ROOT/$i" "$ROOT/$snaps/$i"
+        btrfs sub snap -r "$ROOT/$i" "$ROOT/$SNAPS_DIR/$i"
         sync
-        btrfs sub sync "$ROOT/$snaps/$i"
+        btrfs sub sync "$ROOT/$SNAPS_DIR/$i"
         sync
     done
     lsubs="$(echo $subs | tr ' ' '_')"
@@ -232,7 +281,7 @@ prepare () {
 # IMPORTANT: TODO of lxc_snapshot() profoundly affects this function
 do_backup() {
     echo "Doing backup (TODO: Needs to take vars from \$backup_unit"
-    cd $ROOT/$snaps
+    cd $ROOT/$SNAPS_DIR
     if [ -n "$remuser" ] && [ -n "$remhost" ] && [ -n "$remrepo" ]; then
         stats=$HOME/time_stats_$DATE
     else
@@ -251,7 +300,7 @@ do_backup() {
 cleanup() {
     echo "Cleaning up Snapshots"
     (time (
-            cd $ROOT/$snaps
+            cd $ROOT/$SNAPS_DIR
             btrfs sub delete -c $subs
             echo "Syncing...please be patient, this could be slow"
             sync
