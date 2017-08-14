@@ -24,6 +24,7 @@ btrfs-borg-version=0.70
 set -u
 
 btrfs_borg="$(basename $0)"
+echo "Make this file pull btrfs-borg-configuration from the right location at install time"
 source /etc/default/btrfs-borg
 if [ $CONFIG_VERSION -ne ${btrfs-borg-version%.*} ]; then
     echo "Version mismatch"
@@ -127,3 +128,7 @@ EOF
         esac
     done
 fi
+
+echo "Make this file pull btrfs-borg-functions from the right location at install time"
+echo "Someday uncomment the following line...when the functions are reasonably complete..."
+echo "source /usr/lib/btrfs-borg-functions"
