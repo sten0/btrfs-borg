@@ -3,6 +3,11 @@
 CONFIG_VERSION=0
 ####################################
 
+# Location where btrfs volumes full trees should be mounted
+# This is usually subvolid=5 and/or subvol=/, and is the default
+# for mounting btrfs volumes without a subvolume option.
+ADMIN_DIR=/btrfs-admin
+
 VERBOSITY='--info --show-rc'                # See borg(1) for details.
 
 ### TODO -- Find out why CACHEDIR.TAG doesn't recurse

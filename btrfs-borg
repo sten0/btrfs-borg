@@ -43,6 +43,7 @@ fi
 # Sanity checks
 if [ "$(id -u)" -ne 0 ]; then
     cat <<EOF
+
 Warning, normal user Detected!
 Please run with superuser permissions.
 
@@ -55,6 +56,7 @@ Finally root is required to remove subvolumes, unless
 "user_subvol_rm_allowed" is specified for the volume in /etc/fstab.
 That said, I firmly maintain that normal user subvolume creation and
 deletion should be avoided for the foreseeable future.
+
 EOF
 
     notfound=1
@@ -90,4 +92,38 @@ if [ $(echo -n $BASH_VERSION | cut -d. -f1) -lt 4 ]; then
             esac
         done
     fi
+fi
+
+# Checks to make sure the top-down full-tree is visible to btrfs-borg
+# and that only admins can access it.
+mkdir -p $ADMIN_DIR
+admin_mod=( $(stat -L -c "%G:%U %a" $ADMIN_DIR) )
+admin_own=${admin_dir_mod[0]}
+other_perm=${admin_dir_mod[1]:2}
+
+if [ $admin_own != "root:sudo" -o $admin_own != "root:root" ] && [ $other_perm -ne 0 ]; then
+    echo -n "Unsafe permissions for $ADMIN_DIR.  Fix? (y/n) "
+    while true; do
+        read choice
+        case "$choice" in
+            yes | y | Yes | YES )
+                chown root:root $ADMIN_DIR
+                chmod 750 $ADMIN_DIR
+                cat <<EOF
+
+Owner/permissions changed to root:root/750.  To allow suders to access
+access $ADMIN_DIR, "chgrp sudo $ADMIN_DIR".
+
+EOF
+                break
+                ;;
+            no | n | No | NO )
+                echo "Exiting."
+                exit 1
+                ;;
+            * )
+                echo -n "Please answer yes or no. "
+                ;;
+        esac
+    done
 fi
