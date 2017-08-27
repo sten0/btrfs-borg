@@ -39,15 +39,22 @@ as appropriate /btrfs-admin/volume_namesnapshots/lxc-container_name.
 In any case, it removes the snapshots used to make the backup after
 the backup completes successfully.
 
-Seconds since epoch will allow you to make backups just about
-as often as possible, unless you theoretically have a *really*
-fast system and *really* fast disks, and no changed files
-I chose not to use a format like 2016-01-12-17:03:09
-because `borg list <repo>` already outputs this format in the right-hand
-column, and someone might find machine-readable date stamps useful
-for his/her custom pruning script.  P.S. seconds since epoch is cool ;-)
-Additionally, some filesystems don't handle the colon ":" very well
-Finally, it's shorter than the ISO format (date, time, timezone) yet provides
-the same information. eg:
-2017-02-05T14:41:19-0500  vs
-1486323679
+Seconds since epoch will allow you to make backups as often as
+possible, with no archive name collisions.  I chose not to use a
+format like 2016-01-12-17:03:09 because `borg list <repo>` already
+outputs this format in the right-hand column, and someone might find
+machine-readable date stamps useful for his/her custom pruning script.
+P.S. seconds since epoch is cool.  Additionally, some filesystems
+don't handle the colon ":" very well.  Finally, it's shorter than the
+format (date, time, timezone) yet provides the same information.
+eg: 2017-02-05T14:41:19-0500
+vs  1486323679
+
+Get the current date in seconds since epoch: date +%s
+Convert seconds since epoch
+    to localised format: date -d @1486323679
+    to RFC 2822: date -R -d @1486323679
+    to ISO 8601: date -I -d @1486323679
+Convert to a custom format: date +%F-%R -d @1503865189
+
+man date(1) for more info.
