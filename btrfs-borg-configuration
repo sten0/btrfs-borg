@@ -14,14 +14,16 @@ SNAPS_DIR=snapshots
 
 VERBOSITY='--info --show-rc'                # See borg(1) for details.
 
-### TODO -- Find out why CACHEDIR.TAG doesn't recurse
-### eg: why /var/cache/pbuilder/{base.cow,testing.cow} are traversed
-###     when /var/cache/pbuilder/CACHEDIR.TAG exists
-# Uncomment this to exclude from the backup directories that
-# contain a file named CACHEDIR.TAG; these can be created like this:
-# touch /home/*/.cache/CACHEDIR.TAG
-# EXTRAARGS='--exclude-caches'
+# Uncomment EXTRAARGS to exclude from the backup directories that
+# contain a file named CACHEDIR.TAG; this file must have the following
+# one line ASCII header string (without the leading '#'):
+# # Signature: 8a477f597d28d172789f06886806bc55
+# #
+# # This file is a cache directory tag created by (application name).
+# # For information about cache directory tags, see:
+# #      http://www.brynosaurus.com/cachedir/
 
+# EXTRAARGS='--exclude-caches'
 
 # You can use this section as a pre-backup script eg:
 ### TODO -- Build manifests in a better way?
