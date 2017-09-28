@@ -1,7 +1,14 @@
 # Work-in-Progress Copy DO NOT USE #
 
 ## btrfs-borg
-Btrfs-borg makes snapshots and backs up a list of btrfs snapshotted subvolumes using Borg.  It will also optionally back up a list of directories without first creating snapshots for them.  It includes special support for containers managed by LXC's btrfs backend.  Finally it supports building manifests of directories that won't be backed up.  If you configure manifest support, please make sure that the target location of the manifest will be on one of the subvolumes that you back up.
+Btrfs-borg makes snapshots and backs up a list of btrfs snapshotted subvolumes using Borg.
+
+
+The theory of btrfs-borg is to abstract subvolume names from their underlying filesystems.  You won't need to worry about the underlying structure.  By default, it backs up all subvolumes that aren't snapshots, including the special rootfs subvolume used by LX containers.  These containers are automatically renamed the basename of the container (eg: lxc-info -n $name).  Btrfs-borg will search for named subvolumes on all volumes, and if duplicates are found will prefix the basename device (eg: sda2, sdb3, etc) to the snapshot name, so that @subvol1b will not clobber @subvol1a when restoring from backup.
+
+*TODO: delete a lot of the stuff that follows*
+
+It will also optionally back up a list of directories without first creating snapshots for them.  It includes special support for containers managed by LXC's btrfs backend.  Finally it supports building manifests of directories that won't be backed up.  If you configure manifest support, please make sure that the target location of the manifest will be on one of the subvolumes that you back up.
 
 eg: if SUBS='@home rootfs', but you also have a subvolume called @backups mounted at /home/backups, then 1) /home/backups will not be part of your borg backup, because btrfs-subvolume snap does not back up child subvolumes.  2) If your manifest goes to /home/backups/manifest then it will not be backed up.  If /home/backups is not a separate subvolume, then /home/backups/manifest will be part of the btrfs snapshot and part of the borg backup.
 
