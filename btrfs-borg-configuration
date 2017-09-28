@@ -4,19 +4,42 @@ CONFIG_VERSION=0
 ####################################
 
 # The normal directory where the full trees of each btrfs volume will
-# be mounted.  It will be created if it does not exist.
+# be automounted.  It will be created if it does not exist.  eg: if
+# /btrfs-admin, and you have a btrfs volume on /dev/sda1, and a raid1
+# profile btrfs volume on /dev/sdb2 and /dev/sdc2, then this will
+# mount your volumes at /btrfs-admin/sda1 and /btrfs-admin/sdb
 ADMIN_DIR=/btrfs-admin
 
-# Each volume must have its own snapshot location; this can be a
-# normal directory or a subvolume, inside of each volume's
-# subvolid=5 or subvol=/
+# $ADMIN_DIR permissions will be modified so that only root and this
+# group can access it
+ADMIN_GROUP='sudo'
+
+# SNAPS_DIR is relative to $ADMIN_DIR/device-basename Each volume must
+# have its own snapshot location; this can be either a normal
+# directory or a subvolume, but it must reside directly inside of each
+# volume's subvolid=5 aka: subvol=/
 SNAPS_DIR=snapshots
+
+# SUBVOL_LIST is an exclusive whitelist for all possible backup
+# sources.  If advanced configuration of backup units is desired, you
+# can use the CSV as a second-level exclusive whitelist.  For the
+# simplest configuration, leave this set to 'all' and allow btrfs-borg
+# to backup all subvolumes.  For configuration similar to
+# btrfs-borg-0.13, list your subvolumes here.  For advanced
+# configuration, set to add and configure backup units in the CSV
+#
+# NOTICE: btrfs-borg does not backup subvolumes that are marked as
+# read-only snapshots
+SUBVOL_LIST='all'
+
+
 
 VERBOSITY='--info --show-rc'                # See borg(1) for details.
 
 # Uncomment EXTRAARGS to exclude from the backup directories that
-# contain a file named CACHEDIR.TAG; this file must have the following
-# one line ASCII header string (without the leading '#'):
+# contain a file named CACHEDIR.TAG; this file must, at a minimum,
+# have the following one line ASCII header string (Signature...without
+# the leading '#'):
 # # Signature: 8a477f597d28d172789f06886806bc55
 # #
 # # This file is a cache directory tag created by (application name).
