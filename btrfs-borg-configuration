@@ -23,18 +23,28 @@ SNAPS_DIR=snapshots
 # SUBVOL_LIST is an exclusive whitelist for all possible backup
 # sources.  If advanced configuration of backup units is desired, you
 # can use the CSV as a second-level exclusive whitelist.  For the
-# simplest configuration, leave this set to 'all' and allow btrfs-borg
-# to backup all subvolumes.  For configuration similar to
+# simplest configuration, leave this set to 'auto' and allow btrfs-borg
+# to backup all non-snapshot non-ro subvolumes.  For configuration similar to
 # btrfs-borg-0.13, list your subvolumes here.  For advanced
 # configuration, set to add and configure backup units in the CSV
+# NOTICE: By default, btrfs-borg does not backup subvolumes that are
+# marked as read-only snapshots.  Because the current implementation
+# will send, for example, 1TB of data for @rootfs (new snapshot
+# created from live copy) plus another 1TB for each
+# @rootfs_custom_snapshot.  At a backup rate of 100MiB/s, this adds an
+# additional 167minutes.  Using rsync -c to find the differences would
+# be even slower.  Finally, one of the premises of btrfs-borg is to
+# not depend on btrfs send and receive.
 #
-# NOTICE: btrfs-borg does not backup subvolumes that are marked as
-# read-only snapshots
-SUBVOL_LIST='all'
+# TODO: auto does what I wrote, and all will If you prefer a maximally
+# slow backup, set this to 'all'.  Snapshot filtering will be
+# disabled, and all subvolumes will be backed up
+SUBVOL_LIST='auto'
 
 
 
-VERBOSITY='--info --show-rc'                # See borg(1) for details.
+# See borg(1) for details
+VERBOSITY='--info --show-rc'
 
 # Uncomment EXTRAARGS to exclude from the backup directories that
 # contain a file named CACHEDIR.TAG; this file must, at a minimum,
