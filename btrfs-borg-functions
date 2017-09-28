@@ -143,6 +143,51 @@ is_subvolume() {
     fi
 }
 
+get_parent_uuid() {
+    false
+    # error for now TODO: Needs to be written
+    #     btrfs sub list -q <- enable this later
+}
+
+is_ro_subvolume() {
+    btrfs sub list -o -u -q -r $1/..
+}
+
+# Copy & pasted from btrfsmaintenance-functions @commit: 791581f
+# Copyright: 2014 SuSE Linux AG https://www.suse.com/
+#            2014-2017 David Sterba <dsterba@suse.com>
+# License: GPL-2
+# function: evaluate_auto_mountpoint
+# parameter: A variable name
+#
+# this function checks whether the variable contains the special keyword "auto"
+# if yes, all currently mounted btrfs filesystems are evaluated and their mountpoints
+# are put into the parameter variable
+evaluate_auto_mountpoint() {
+    MOUNTPOINTSVAR=\$"$1"
+    if [ "$(eval "expr \"$MOUNTPOINTSVAR\"")" = "auto" ]; then
+        local BTRFS_DEVICES=""
+        local DEVICE=""
+        local MNT=""
+        local MNTLIST=""
+        # find all mounted btrfs filesystems, print their device nodes, sort them
+        # and remove identical entries
+        BTRFS_DEVICES=$(findmnt --types btrfs --output "SOURCE" --nofsroot --noheading | sort | uniq)
+                            # find one (and only one) corresponding mountpoint for each btrfs device\
+                                node
+                                for DEVICE in $BTRFS_DEVICES; do
+                                    MNT=$(findmnt --types btrfs --first-only --noheadings --output "TARGET" --source "$DEVICE")
+                                    if [ -n "$MNTLIST" ]; then
+                                        MNTLIST="$MNTLIST:$MNT"
+                                    else
+                                        MNTLIST="$MNT"
+                                    fi
+                                done
+                                echo "evaluate mounted filesystems: $MNTLIST"
+                                eval "$1=$MNTLIST"
+    fi
+}
+
 # function: returns true if an LX container is found
 # parameter: filesystem path
 # TODO: write it
@@ -300,12 +345,12 @@ do_backup() {
 cleanup() {
     echo "Cleaning up Snapshots"
     (time (
-            cd $ROOT/$SNAPS_DIR
-            btrfs sub delete -c $subs
-            echo "Syncing...please be patient, this could be slow"
-            sync
-            btrfs sub sync $ROOT
-            sync)
+         cd $ROOT/$SNAPS_DIR
+         btrfs sub delete -c $subs
+         echo "Syncing...please be patient, this could be slow"
+         sync
+         btrfs sub sync $ROOT
+         sync)
      2>&3) 3>&2 2> $stats
     echo -n "Cleanup took "
     cat $stats
