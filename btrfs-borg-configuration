@@ -36,9 +36,9 @@ SNAPS_DIR=snapshots
 # be even slower.  Finally, one of the premises of btrfs-borg is to
 # not depend on btrfs send and receive.
 #
-# TODO: auto does what I wrote, and all will If you prefer a maximally
-# slow backup, set this to 'all'.  Snapshot filtering will be
-# disabled, and all subvolumes will be backed up
+# TODO: auto does what is written above, If you prefer a maximally,
+# set this to 'all'.  Snapshot filtering will be disabled, and all
+# subvolumes will be backed up
 SUBVOL_LIST='auto'
 
 
