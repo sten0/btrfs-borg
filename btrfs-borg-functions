@@ -15,11 +15,13 @@
 # TODO: Go through this an recapitalise variables that now need global
 # scope.
 
+
 # function: trim leading and trailing whitespace from strings
 # parameter: string, taken from a field of a CSV
 # TODO: test to see if this is truly necessary, and if not, drop it
-trim() {
-    string="$*" ; local string
+trim_whitespace() {
+    local string
+    string="$*"
     string="${string#"${string%%[![:space:]]*}"}"
     string="${string%"${string##*[![:space:]]}"}"
     printf "$string"
@@ -28,23 +30,42 @@ trim() {
 # function: returns a space-separated list of btrfs devices,
 #           with one device per volume (eg: /dev/sda1)
 # parameter: NA
+#
+# Adapted from btrfsmaintenance-functions evaluate_auto_mountpoint()
+
 get_uniq_devs() {
-    findmnt --types btrfs --noheadings --output "SOURCE" --nofsroot \
-            --noheading | sort | uniq | tr '\n' ' '
+    local devices
+    devices=$(findmnt --types btrfs --noheadings --output "SOURCE" --nofsroot \
+                      --noheading | sort | uniq | tr '\n' ' ')
+    trim_whitespace $devices
 }
 
 # function: gets volume LABEL if possible and returns it, otherwise
 #           returns basename of parameter
 # parameter: takes one block device or partition (eg: /dev/sda1)
-try_get_label() {
-    device=$(blkid | grep $1) ; local device
-    label=${device##*\ LABEL=}
-    label=${label%%\ *} ; local label
+get_label() {
+    local label
+    label=$(lsblk -J -oLABEL $1 | grep label | awk -F\" '{print $4}')
     if [ ! -z "$label" ]; then
         printf "$label"
+        #        echo "Label for $1 is $label"
     else
-        printf "${basename $device}"
+        printf "$(basename $1)"
+        #        echo "no label found for $(basename $1) -- using $(basename $1)"
     fi
+}
+
+# function: this temporary function is a stub that reminds me how to
+#           use the above functions.  It will be probably be renamed
+#           or removed in the future.
+#
+# parameter: NA
+create_mount_points() {
+    for i in $(get_uniq_devs); do
+        local label_or_dev
+        label_or_dev=$(get_label $i)
+        echo "Creating mount point for $label_or_dev"
+    done
 }
 
 # function: Other sanity checks
@@ -151,41 +172,6 @@ get_parent_uuid() {
 
 is_ro_subvolume() {
     btrfs sub list -o -u -q -r $1/..
-}
-
-# Copy & pasted from btrfsmaintenance-functions @commit: 791581f
-# Copyright: 2014 SuSE Linux AG https://www.suse.com/
-#            2014-2017 David Sterba <dsterba@suse.com>
-# License: GPL-2
-# function: evaluate_auto_mountpoint
-# parameter: A variable name
-#
-# this function checks whether the variable contains the special keyword "auto"
-# if yes, all currently mounted btrfs filesystems are evaluated and their mountpoints
-# are put into the parameter variable
-evaluate_auto_mountpoint() {
-    MOUNTPOINTSVAR=\$"$1"
-    if [ "$(eval "expr \"$MOUNTPOINTSVAR\"")" = "auto" ]; then
-        local BTRFS_DEVICES=""
-        local DEVICE=""
-        local MNT=""
-        local MNTLIST=""
-        # find all mounted btrfs filesystems, print their device nodes, sort them
-        # and remove identical entries
-        BTRFS_DEVICES=$(findmnt --types btrfs --output "SOURCE" --nofsroot --noheading | sort | uniq)
-                            # find one (and only one) corresponding mountpoint for each btrfs device\
-                                node
-                                for DEVICE in $BTRFS_DEVICES; do
-                                    MNT=$(findmnt --types btrfs --first-only --noheadings --output "TARGET" --source "$DEVICE")
-                                    if [ -n "$MNTLIST" ]; then
-                                        MNTLIST="$MNTLIST:$MNT"
-                                    else
-                                        MNTLIST="$MNT"
-                                    fi
-                                done
-                                echo "evaluate mounted filesystems: $MNTLIST"
-                                eval "$1=$MNTLIST"
-    fi
 }
 
 # function: returns true if an LX container is found
