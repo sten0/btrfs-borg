@@ -95,14 +95,18 @@ if [ $(echo -n $BASH_VERSION | cut -d. -f1) -lt 4 ]; then
     fi
 fi
 
+echo "Make this file pull btrfs-borg-functions from the right location at install time"
+echo "Someday uncomment the following line...when the functions are reasonably complete..."
+echo "source /usr/lib/btrfs-borg-functions"
+
 # Checks to make sure the top-down full-tree is visible to btrfs-borg
 # and that only admins can access it.
-mkdir -p $ADMIN_DIR
+create_mount_points
 admin_mod=( $(stat -L -c "%G:%U %a" $ADMIN_DIR) )
 admin_own=${admin_dir_mod[0]}
 other_perm=${admin_dir_mod[1]:2}
 
-if [ $admin_own != "root:sudo" -o $admin_own != "root:root" ] && [ $other_perm -ne 0 ]; then
+if [ $admin_own != "root:$ADMIN_GROUP" -o $admin_own != "root:root" ] && [ $other_perm -ne 0 ]; then
     echo -n "Unsafe permissions for $ADMIN_DIR.  Fix? (y/n) "
     while true; do
         read choice
@@ -112,7 +116,7 @@ if [ $admin_own != "root:sudo" -o $admin_own != "root:root" ] && [ $other_perm -
                 chmod 750 $ADMIN_DIR
                 cat <<EOF
 
-Owner/permissions changed to root:root/750.  To allow suders to access
+Owner/permissions changed to root:root/750.  To allow sudoers to access
 access $ADMIN_DIR, "chgrp sudo $ADMIN_DIR".
 
 EOF
@@ -128,7 +132,3 @@ EOF
         esac
     done
 fi
-
-echo "Make this file pull btrfs-borg-functions from the right location at install time"
-echo "Someday uncomment the following line...when the functions are reasonably complete..."
-echo "source /usr/lib/btrfs-borg-functions"
