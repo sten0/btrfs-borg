@@ -17,8 +17,8 @@
 
 
 # function: trim leading and trailing whitespace from strings
-# parameter: string, taken from a field of a CSV
-# TODO: test to see if this is truly necessary, and if not, drop it
+# parameter: string
+# used in get_uniq_devs(), and also from a field of a CSV
 trim_whitespace() {
     local string
     string="$*"
@@ -32,7 +32,6 @@ trim_whitespace() {
 # parameter: NA
 #
 # Adapted from btrfsmaintenance-functions evaluate_auto_mountpoint()
-
 get_uniq_devs() {
     local devices
     devices=$(findmnt --types btrfs --noheadings --output "SOURCE" --nofsroot \
@@ -48,10 +47,8 @@ get_label() {
     label=$(lsblk -J -oLABEL $1 | grep label | awk -F\" '{print $4}')
     if [ ! -z "$label" ]; then
         printf "$label"
-        #        echo "Label for $1 is $label"
     else
         printf "$(basename $1)"
-        #        echo "no label found for $(basename $1) -- using $(basename $1)"
     fi
 }
 
@@ -60,11 +57,17 @@ get_label() {
 #           or removed in the future.
 #
 # parameter: NA
+#            TODO: or send it the list from get_uniq_devs externally?
 create_mount_points() {
-    for i in $(get_uniq_devs); do
+    # here it creates a mount point for each argument
+    # TODO: Make sure that get_uniq_devs is used here?
+    #       Or revert to old behaviour?
+    # Previously this was: -> for i in $(get_uniq_devs); do
+    for i in "$@"; do
         local label_or_dev
         label_or_dev=$(get_label $i)
-        echo "Creating mount point for $label_or_dev"
+        echo "Creating temporary mount point for $label_or_dev"
+        mkdir -p $ADMIN_DIR/$SNAPS_DIR
     done
 }
 
@@ -90,34 +93,6 @@ $i@$AGE"
             btrfs sub sync "$ROOT"
             sync
         done
-    else
-        cat <<EOF
-REPLACE THE FOLLOWING SECTION WITH MKDIR -P...ALWAYS WORKS, AND
-ALWAYS SILENT ;-)
-EOF
-        echo "$ROOT/$SNAPS_DIR not found! $COMMAND cannot continue."
-        echo "create $ROOT/$SNAPS_DIR?"
-        if [ -z ${NOTFOUND+x} ]; then
-            echo -n "Proceed? "
-            while true; do
-                read choice
-                case "$choice" in
-                    yes | y | Yes | YES )
-                        echo "Creating $SNAPS_DIR"
-                        install -d -m 700
-                        break
-                        ;;
-                    no | n | No | NO )
-                        echo "Exiting safely."
-                        exit 1
-                        ;;
-                    * )
-                        printf "Please answer yes or no\n\n"
-                        ;;
-                esac
-            done
-        fi
-        exit 1
     fi
 
     # PREP-STUFF.  TARGET FOR CLEANUP!
