@@ -16,6 +16,48 @@
 # scope.
 
 
+# function: Checks that only admins can access $ADMIN_DIR and offers to fix
+#           unsafe permissions.
+#
+# parameter: NA
+check_permissions() {
+    admin_mod=( $(stat -L -c "%G:%U %a" $ADMIN_DIR) )
+    admin_own=${admin_dir_mod[0]}
+    other_perm=${admin_dir_mod[1]:2}
+
+    if [ $admin_own != "root:$ADMIN_GROUP" -o $admin_own != "root:root" ] \
+           && [ $other_perm -ne 0 ]; then
+        echo -n "Unsafe permissions for $ADMIN_DIR.  Fix? (y/n) "
+        while true; do
+            read choice
+            case "$choice" in
+                yes | y | Yes | YES )
+                    chown root:root $ADMIN_DIR
+                    chmod 750 $ADMIN_DIR
+                    cat <<EOF
+
+Owner/permissions changed to root:root/750.  To allow sudoers to access
+access $ADMIN_DIR, "chgrp sudo $ADMIN_DIR".
+
+EOF
+                    break
+                    ;;
+                no | n | No | NO )
+                    cat <<EOF
+
+Btrfs-borg will terminate now, due to unsafe permissions in $ADMIN_DIR.
+
+EOF
+                    exit 1
+                    ;;
+                * )
+                    echo -n "Please answer yes or no.  "
+                    ;;
+            esac
+        done
+    fi
+}
+
 # function: trim leading and trailing whitespace from strings
 # parameter: string
 # used in get_uniq_devs(), and also from a field of a CSV
@@ -30,6 +72,7 @@ trim_whitespace() {
 # function: returns a space-separated list of btrfs devices,
 #           with one device per volume (eg: /dev/sda1)
 # parameter: NA
+# requires: trim_whitespace()
 #
 # Adapted from btrfsmaintenance-functions evaluate_auto_mountpoint()
 get_uniq_devs() {
@@ -52,22 +95,22 @@ get_label() {
     fi
 }
 
-# function: this temporary function is a stub that reminds me how to
-#           use the above functions.  It will be probably be renamed
-#           or removed in the future.
+# function: This function ensures that the top-down full-tree view of
+#           a volume is visible to btrfs-borg.  It creates the
+#           required directory structure and mounts the volume[s].
 #
-# parameter: NA
-#            TODO: or send it the list from get_uniq_devs externally?
+# parameter: accepts either single labels/devices or a list
+# requires: get_label()
 create_mount_points() {
-    # here it creates a mount point for each argument
-    # TODO: Make sure that get_uniq_devs is used here?
-    #       Or revert to old behaviour?
-    # Previously this was: -> for i in $(get_uniq_devs); do
     for i in "$@"; do
         local label_or_dev
         label_or_dev=$(get_label $i)
         echo "Creating temporary mount point for $label_or_dev"
-        mkdir -p $ADMIN_DIR/$SNAPS_DIR
+        exit 1
+        # TODO: needs check to see if $ADMIN_DIR/$label_or_dev is already
+        #       mounted
+        mount -o noatime $i $ADMIN_DIR/$label_or_dev
+        mkdir -p $ADMIN_DIR/$label_or_dev/$SNAPS_DIR
     done
 }
 
@@ -76,24 +119,24 @@ create_mount_points() {
 # TODO: needs to iterate for new $backup_srcs
 #       Other sanity checks.
 #       CLEANUP -> move these to immediately before snapshot is taken
+# TODO: needs magic!  Possibly needs rewrite...  eg: right now it needs both $ADMIN_DIR/$label_or_dev/$SNAPS_DIR AND the backup src-object...but I haven't written the automatically find src-object (eg: subvolume) yet.  The loop should probably be external to the function.
 pre_snapshot() {
-    if [ -d "$ROOT/$SNAPS_DIR" ]; then
-        cd "$ROOT/$SNAPS_DIR"
-        for i in $subs; do
-            if [ -d "$i" ]; then
-                AGE=$(stat -c %Y "$i")
-                # this \/ isn't very nice...
-                # make snapshots as btrfs-borg-$i or $i.borg-snap instead
-                echo "Moving existing snapshot of $i out of the way to
+    cd "$ROOT/$SNAPS_DIR"
+    for i in $subs; do
+        if [ -d "$i" ]; then
+            orig_date=$(stat -c %Y "$i")
+            # this \/ isn't very nice...
+            # make snapshots as btrfs-borg-$i or $i.borg-snap instead
+            echo "Moving existing snapshot of $i out of the way to
 $i@$AGE"
-                echo "TODO make snapshots as btrfs-borg_$i or $i.borg-snap instead"
-                mv "$i" "$i"@"$AGE"
-            fi
-            sync
-            btrfs sub sync "$ROOT"
-            sync
-        done
-    fi
+            echo "TODO make snapshots as btrfs-borg_$i or $i.borg-snap instead"
+            mv "$i" "$i"@"$orig_date"
+        fi
+        sync
+        btrfs sub sync "$ROOT"
+        sync
+    done
+fi
 
     # PREP-STUFF.  TARGET FOR CLEANUP!
     # TODO: Make it a function
@@ -147,6 +190,8 @@ get_parent_uuid() {
 
 is_ro_subvolume() {
     btrfs sub list -o -u -q -r $1/..
+    false
+    # TODO: write this function!
 }
 
 # function: returns true if an LX container is found
@@ -155,7 +200,7 @@ is_ro_subvolume() {
 #       merge it into get_lxc_rootfs?
 is_lxc() {
     echo "check for existence of $1/config?"
-    echo "avoid using grep!"
+    echo "avoid using grep!"  # <-  really?  Why?
     echo "grep $1/config for REGEX lxc.rootfs.backend.*btrfs"
 }
 
