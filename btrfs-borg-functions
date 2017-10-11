@@ -54,9 +54,10 @@ EOF
     fi
 }
 
-# function: trim leading and trailing whitespace from strings
-# parameter: string
-# used in get_uniq_devs(), and also from a field of a CSV
+# function: trim leading and trailing whitespace from strings,
+# parameter: one string
+# returns: trimmed string
+# used in get_uniq_devs(), and for trimming each field config.csv
 trim_whitespace() {
     local string
     string="$*"
@@ -79,11 +80,13 @@ get_uniq_devs() {
 }
 
 # function: gets volume LABEL if possible and returns it, otherwise
-#           returns basename of parameter
+#           returns basename of parameter (eg: sda1)
 # parameter: takes one block device or partition (eg: /dev/sda1)
 get_label() {
     local label
     label=$(lsblk -J -oLABEL $1 | grep label | awk -F\" '{print $4}')
+    # alternatively btrfs property get -t filesystem $1 label
+    # will print 'label=This_is_this_label'
     if [ ! -z "$label" ]; then
         printf "$label"
     else
