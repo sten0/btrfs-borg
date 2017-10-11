@@ -63,7 +63,7 @@ trim_whitespace() {
     string="$*"
     string="${string#"${string%%[![:space:]]*}"}"
     string="${string%"${string##*[![:space:]]}"}"
-    printf "$string"
+    echo -n "$string"
 }
 
 # function: returns a space-separated list of btrfs devices,
@@ -88,9 +88,9 @@ get_label() {
     # alternatively btrfs property get -t filesystem $1 label
     # will print 'label=This_is_this_label'
     if [ ! -z "$label" ]; then
-        printf "$label"
+        echo -n "$label"
     else
-        printf "$(basename $1)"
+        echo -n "$(basename $1)"
     fi
 }
 
