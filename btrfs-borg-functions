@@ -21,13 +21,12 @@
 #
 # parameter: NA
 check_permissions() {
-    admin_mod=( $(stat -L -c "%G:%U %a" $ADMIN_DIR) )
+    admin_dir_mod=($(stat -L -c "%G:%U %a" $ADMIN_DIR))
     admin_own=${admin_dir_mod[0]}
     other_perm=${admin_dir_mod[1]:2}
-
     if [ $admin_own != "root:$ADMIN_GROUP" -o $admin_own != "root:root" ] \
            && [ $other_perm -ne 0 ]; then
-        echo -n "Unsafe permissions for $ADMIN_DIR.  Fix? (y/n) "
+        echo -n "Unsafe permissions for $ADMIN_DIR.  Fix? (y/n)  "
         while true; do
             read choice
             case "$choice" in
@@ -35,18 +34,15 @@ check_permissions() {
                     chown root:root $ADMIN_DIR
                     chmod 750 $ADMIN_DIR
                     cat <<EOF
-
 Owner/permissions changed to root:root/750.  To allow sudoers to access
-access $ADMIN_DIR, "chgrp sudo $ADMIN_DIR".
-
+access $ADMIN_DIR, "chgrp sudo $ADMIN_DIR" and set \$ADMIN_GROUP in
+btrfs-borg config.
 EOF
                     break
                     ;;
                 no | n | No | NO )
                     cat <<EOF
-
 Btrfs-borg will terminate now, due to unsafe permissions in $ADMIN_DIR.
-
 EOF
                     exit 1
                     ;;
