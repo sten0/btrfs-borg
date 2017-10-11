@@ -189,10 +189,9 @@ $i@$AGE"
             mv "$i" "$i"@"$orig_date"
         fi
         sync
-        btrfs sub sync "$ROOT"
+        btrfs subvolume sync "$ROOT"
         sync
     done
-fi
 
     # PREP-STUFF.  TARGET FOR CLEANUP!
     # TODO: Make it a function
@@ -244,7 +243,7 @@ get_lxc_rootfs() {
     cat <<EOF
 OR DO IT THIS WAY:
 
-sudo btrfs sub list /btrfs-admin/Blue
+sudo btrfs subvolume list /btrfs-admin/Blue
 PRINTS:
 
 ID 257 gen 927355 top level 5 path @rootfs
@@ -254,13 +253,13 @@ ID 511 gen 927351 top level 257 path @rootfs/var/lib/lxc/my-container/rootfs
 
 Then, from inside /btrfs-admin/Blue, do:
 
-btrfs sub snap -r @rootfs/var/lib/lxc/my-container/rootfs \
+btrfs subvolume snaphot -r @rootfs/var/lib/lxc/my-container/rootfs \
     snapshots/my-container
 
 This seems like a slightly better style than:
   from inside /btrfs-admin/Blue/snapshots, do:
 
-btrfs sub snap -r ../@rootfs/var/lib/lxc/my-container/rootfs \
+btrfs subvolume snapshot -r ../@rootfs/var/lib/lxc/my-container/rootfs \
     snapshots/my-container
 
 EOF
@@ -300,13 +299,13 @@ lxc_snapshot() {
             lxc-stop -n "$i"
             lxc-snapshot -n "$i"
             sync
-            btrfs sub sync "$lxcdir"
+            btrfs subvolume sync "$lxcdir"
             sync
             lxc-start -n "$i"
             if [ -z "$lxcsnaps" ]; then
-                lxcsnaps="$(btrfs sub list $lxcdir | grep $i | tail -n1 | awk '{print $NF}')"
+                lxcsnaps="$(btrfs subvolume list $lxcdir | grep $i | tail -n1 | awk '{print $NF}')"
             else
-                lxcsnaps="$lxcsnaps $(btrfs sub list $lxcdir | grep $i | tail -n1 | awk '{print $NF}')"
+                lxcsnaps="$lxcsnaps $(btrfs subvolume list $lxcdir | grep $i | tail -n1 | awk '{print $NF}')"
             fi
         done
         containers="$(echo $containers | tr ' ' '_')"
@@ -321,12 +320,12 @@ lxc_snapshot() {
 prepare () {
     echo "Preparing..."
     sync
-    btrfs sub sync "$ROOT"
+    btrfs subvolume sync "$ROOT"
     sync
     for i in $subs; do
-        btrfs sub snap -r "$ROOT/$i" "$ROOT/$SNAPS_DIR/$i"
+        btrfs subvolume snapshot -r "$ROOT/$i" "$ROOT/$SNAPS_DIR/$i"
         sync
-        btrfs sub sync "$ROOT/$SNAPS_DIR/$i"
+        btrfs subvolume sync "$ROOT/$SNAPS_DIR/$i"
         sync
     done
     lsubs="$(echo $subs | tr ' ' '_')"
@@ -368,10 +367,10 @@ cleanup() {
     echo "Cleaning up Snapshots"
     (time (
          cd $ROOT/$SNAPS_DIR
-         btrfs sub delete -c $subs
+         btrfs subvolume delete -c $subs
          echo "Syncing...please be patient, this could be slow"
          sync
-         btrfs sub sync $ROOT
+         btrfs subvolume sync $ROOT
          sync)
      2>&3) 3>&2 2> $stats
     echo -n "Cleanup took "
@@ -438,7 +437,7 @@ bundle_stuff() {
         # \/ TODO \/
         #install -d -m 400 $BTRFS-BORG.CSV $repo/btrfs-borg/$BTRFS-BORG.CSV
         # TODO: make this iterate for multiple ROOTS
-        btrfs sub list $ROOT | ssh $remuser@$remhost "cat > $remrepo/btrfs-borg/subvolumes_of_$base"
+        btrfs subvolume list $ROOT | ssh $remuser@$remhost "cat > $remrepo/btrfs-borg/subvolumes_of_$base"
     else
         # Bundle stuff that will make restoring from backup easier
         mkdir -p $repo/btrfs-borg && chown 700 $repo/btrfs-borg
@@ -454,7 +453,7 @@ bundle_stuff() {
         # \/ TODO \/
         #install -d -m 400 $BTRFS-BORG.CSV $repo/btrfs-borg/$BTRFS-BORG.CSV
         # TODO: make this iterate for multiple ROOTS
-        btrfs sub list $ROOT > $repo/btrfs-borg/subvolumes_of_$base
+        btrfs subvolume list $ROOT > $repo/btrfs-borg/subvolumes_of_$base
     fi
 }
 
