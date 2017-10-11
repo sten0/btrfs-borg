@@ -94,6 +94,63 @@ get_label() {
     fi
 }
 
+# returns: boolean
+is_btrfs() {
+    if [ "$(stat -f --format=%T $1)" == 'btrfs' ]; then
+        echo "$1 is a btrfs volume"
+    else
+        echo "$1 is not a btrfs volume"
+        false
+    fi
+}
+
+# returns: boolean
+is_subvol() {
+    if [ "$(stat -f --format=%T $1)" == 'btrfs' ] \
+           && [ "$(stat --format=%i $1)" -eq 256 ]; then
+        echo "$1 is a btrfs subvolume"
+    else
+        echo "$1 is not a btrfs subvolume"
+        false
+    fi
+}
+
+# parameter: TODO
+# returns: TODO
+get_parent_uuid() {
+    btrfs subvolume list -o -u -q -r $1/.. # ????
+    false
+    # error for now TODO: Needs to be written
+    #     btrfs subvolume list -q <- enable this later
+}
+
+# TODO: write this function!
+# parameter: string, takes one volume root (subvolid=5 | subvol=/)
+# returns: TO BE WRITTEN
+list_ro_subvols() {
+    btrfs subvolume list -o -u -q -r $1/.. # ????
+}
+
+# parameter: string, takes a path to a subvolume
+# returns: boolean
+is_subvol_ro() {
+    if [ "$(btrfs property get -t subvol $1)" = "ro=true" ]; then
+        true
+    else
+        false
+    fi
+}
+
+# function: returns true if an LX container is found
+# parameter: filesystem path
+# TODO: write it
+#       merge it into get_lxc_rootfs?
+is_lxc() {
+    echo "check for existence of $1/config?"
+    echo "avoid using grep!"  # <-  really?  Why?
+    echo "grep $1/config for REGEX lxc.rootfs.backend.*btrfs"
+}
+
 # function: This function ensures that the top-down full-tree view of
 #           a volume is visible to btrfs-borg.  It creates the
 #           required directory structure and mounts the volume[s].
@@ -162,46 +219,6 @@ EOF
     echo "Configuration found for $repo"
 }
 # end pre_snapshot()
-
-is_btrfs() {
-    if [ "$(stat -f --format=%T $1)" == 'btrfs' ]; then
-        echo "$1 is a btrfs volume"
-    else
-        echo "$1 is not a btrfs volume"
-    fi
-}
-
-is_subvolume() {
-    if [ "$(stat -f --format=%T $1)" == 'btrfs' ] && \
-           [ "$(stat --format=%i $1)" -eq 256 ]; then
-        echo "$1 is a btrfs subvolume"
-    else
-        echo "$1 is not a btrfs subvolume"
-        false
-    fi
-}
-
-get_parent_uuid() {
-    false
-    # error for now TODO: Needs to be written
-    #     btrfs sub list -q <- enable this later
-}
-
-is_ro_subvolume() {
-    btrfs sub list -o -u -q -r $1/..
-    false
-    # TODO: write this function!
-}
-
-# function: returns true if an LX container is found
-# parameter: filesystem path
-# TODO: write it
-#       merge it into get_lxc_rootfs?
-is_lxc() {
-    echo "check for existence of $1/config?"
-    echo "avoid using grep!"  # <-  really?  Why?
-    echo "grep $1/config for REGEX lxc.rootfs.backend.*btrfs"
-}
 
 # function:
 # parameter: LX container path
