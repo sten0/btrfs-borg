@@ -1,14 +1,13 @@
 # btrfs-borg
 
 # TODO: decide whether .csv or in-script BACKUP_SRC take priority
-# TODO: accept command-line argument for .csv configuration file
+# TODO: accept command-line argument for .csv configuration file?
 # TODO: decide on BACKUP_SRCS vs BACKUP_UNIT
 # TODO: long-term, allow one-shot command line mode using:
-# -m|--admin, -s|--srcs, -r|--repo, or something like this.
+# -m|--admin, -s|--srcs, -r|--repo, or something like this?
 
 # two-column CSV (the trim() function will handle leading and trailing
 # whitespace)
-# TODO: actually implement the third-collumn REPO support!
 # TODO: maybe change BACKUP_SRCS back to BACKUP_UNIT and make the
 # intended borg repo local to the BACKUP_UNIT...eg: OS-level-stuff
 # can go to one REPO, containers to another REPO, user data to another, etc.
@@ -20,9 +19,9 @@ BACKUP_UNITS='/btrfs-admin/Red,@stuff absolute_path_dir,/path/to/borg/repo
 #       IN PROGRESS, USING is_btrfs()
 # TODO: Make BACKUP-UNIT local to the backup() function?
 
-# TODO: Add support for quiescing and unquiescing databases
-# TODO -> quiesce_command=""
-# TODO -> unquiesce_command=""
+# TODO: Add support for quiescing and unquiescing databases?
+#      -> quiesce_command=""
+#      -> unquiesce_command=""
 
 ###################################################################
 ####          OPTIONAL, FOR CONVENIENCE.  PLEASE NOTE          ####
@@ -43,28 +42,3 @@ BACKUP_UNITS='/btrfs-admin/Red,@stuff absolute_path_dir,/path/to/borg/repo
                                          # be in the list of $OTHERS, or your backup won't be able
                                          # to restore a bootable system!  It might also be a good
                                          # idea to backup the UEFI ESP ;-)
-# TODO: FIXABLE IN PROGRESS using my generic is_btrfs() check!  Finish implementing functionality
-# TODO: test if each $OTHERS is an empty directory, and try mounting it if it is?
-
-# TODO: move to README or manpage Seconds since epoch will allow you
-# to make backups just about as often as possible, unless you
-# theoretically have a *really* fast system, and *really* fast disks,
-# and no changed files.  I chose not to use a format like
-# 2016-01-12-17:03:09 because borg list <REPO> already outputs this
-# format in the right-hand column, and someone might find
-# machine-readable date stamps useful for his/her custom pruning
-# script.  P.S. seconds since epoch is cool ;-) Additionally, some
-# filesystems don't handle the colon ":" very well and btrfs-borg
-# bundles a copy of itself on your backup drive.  This function will
-# fail if a user backups up to one of these lesser filesystems.
-# Finally, it's shorter than the ISO format (date, time, timezone) yet
-# provides the same information.
-
-# TODO: find out how often collisions will occur with "uuid | cut -d-
-# -f1".  If it's not terrible then suggest it as a viable alternative
-# to `date +%s`
-
-Finally root is required to remove subvolumes, unless
-"user_subvol_rm_allowed" is specified for the volume in /etc/fstab.
-that said, I firmly maintain that normal user subvolume creation
-should be avoided for the foreseeable future.

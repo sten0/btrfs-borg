@@ -104,3 +104,23 @@ done <<< "$BACKUP_UNITS"
 #         Is /var/lib/lxc/my-container a subvol?
 # Backing up backup unit: /btrfs-admin/Blue, @ @home /var/lib/lxc/my-container
 # using ROOT=/btrfs-admin/Blue and SRC objects=@ @home /var/lib/lxc/my-container
+
+
+# Therefore, LXCS=/var/lib/lxc/* will work
+#            REMOVE NON-DIRS FROM LIST
+#            IS_BTRFS $container-name/rootfs !!
+#            AT THIS POINT ERROR IF ITS NOT
+#            IN THE FUTURE SUPPORT OTHER backends vs lxc-start and lxc-stop
+
+###########
+# This is the right place to generate nice-to-have restore info
+# eg:
+#
+mkdir $VOLUME-ADMIN-DIR/restoration-hints
+cd $VOLUME-ADMIN-DIR/restoration-hints
+for i in $devices; do
+    sfdisk -d /dev/$i > $i.sfdisk
+
+done
+#
+########
