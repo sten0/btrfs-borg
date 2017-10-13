@@ -61,6 +61,10 @@ EOF
 #
 # Used in get_uniq_devs(), and for trimming each field config.csv
 trim_whitespace() {
+    if [ -z ${1+x} ]; then
+        return 22
+        # invalid argument
+    fi
     local string
     string="$*"
     string="${string#"${string%%[![:space:]]*}"}"
@@ -75,6 +79,10 @@ trim_whitespace() {
 #
 # Adapted from btrfsmaintenance-functions evaluate_auto_mountpoint()
 get_uniq_devs() {
+    if [ -z ${1+x} ]; then
+        return 22
+        # invalid argument
+    fi
     local devices
     devices=$(findmnt --types btrfs --noheadings --output "SOURCE" --nofsroot \
                       --noheading | sort | uniq | tr '\n' ' ')
@@ -85,6 +93,10 @@ get_uniq_devs() {
 #           returns basename of parameter (eg: sda1)
 # parameter: takes one block device or partition (eg: /dev/sda1)
 get_label() {
+    if [ -z ${1+x} ]; then
+        return 15
+        # block device required
+    fi
     local label
     label=$(lsblk -J -oLABEL $1 | grep label | awk -F\" '{print $4}')
     # alternatively btrfs property get -t filesystem $1 label
@@ -99,6 +111,10 @@ get_label() {
 # parameter: takes a path to a file or directory
 # returns: boolean
 is_btrfs() {
+    if [ -z ${1+x} ]; then
+        return 22
+        # invalid argument
+    fi
     if [ "$(stat -f --format=%T $1)" == 'btrfs' ]; then
         echo "$1 is part of a btrfs volume"
     else
@@ -109,6 +125,10 @@ is_btrfs() {
 
 # returns: boolean
 is_subvol() {
+    if [ -z ${1+x} ]; then
+        return 22
+        # invalid argument
+    fi
     if [ "$(stat -f --format=%T $1)" == 'btrfs' ] \
            && [ "$(stat --format=%i $1)" -eq 256 ]; then
         echo "$1 is a btrfs subvolume"
@@ -121,6 +141,10 @@ is_subvol() {
 # parameter: TODO
 # returns: TODO
 get_parent_uuid() {
+    if [ -z ${1+x} ]; then
+        return 22
+        # invalid argument
+    fi
     btrfs subvolume list -o -u -q -r $1/.. # ????
     false
     # error for now TODO: Needs to be written
@@ -131,12 +155,20 @@ get_parent_uuid() {
 # parameter: string, takes one volume root (subvolid=5 | subvol=/)
 # returns: TO BE WRITTEN
 list_ro_subvols() {
+    if [ -z ${1+x} ]; then
+        return 22
+        # invalid argument
+    fi
     btrfs subvolume list -o -u -q -r $1/.. # ????
 }
 
 # parameter: string, takes a path to a subvolume
 # returns: boolean
 is_subvol_ro() {
+    if [ -z ${1+x} ]; then
+        return 22
+        # invalid argument
+    fi
     if [ "$(btrfs property get -t subvol $1)" = "ro=true" ]; then
         true
     else
@@ -149,6 +181,10 @@ is_subvol_ro() {
 # TODO: write it
 #       merge it into get_lxc_rootfs?
 is_lxc() {
+    if [ -z ${1+x} ]; then
+        return 22
+        # invalid argument
+    fi
     echo "check for existence of $1/config?"
     echo "avoid using grep!"  # <-  really?  Why?
     echo "grep $1/config for REGEX lxc.rootfs.backend.*btrfs"
@@ -162,6 +198,10 @@ is_lxc() {
 # parameter: accepts either single labels/devices or a list
 # requires: get_label()
 create_mount_points() {
+    if [ -z ${1+x} ]; then
+        return 22
+        # invalid argument
+    fi
     for i in "$@"; do
         local label_or_dev
         label_or_dev=$(get_label $i)
@@ -180,6 +220,10 @@ create_mount_points() {
 #            user@host:/path/to/borg/repo
 # returns: exit code
 repo_exists() {
+    if [ -z ${1+x} ]; then
+        return 22
+        # invalid argument
+    fi
     # let's suppose $1=bizarre@dir_name:has:colons/oh/no
     if [ -e "$1" ]; then
         echo "Please consider naming $1 without @s and :s"
@@ -227,6 +271,10 @@ EOF
 #       src-object (eg: subvolume) yet.  The loop should probably be
 #       external to the function.
 pre_snapshot() {
+    if [ -z ${1+x} ]; then
+        return 22
+        # invalid argument
+    fi
     cd "$ROOT/$SNAPS_DIR"
     for i in $subs; do
         if [ -d "$i" ]; then
@@ -255,6 +303,10 @@ $i@$AGE"
 #       And/Or take a $container-name without a path and find it using
 #       /sbin/btrfs, and return /a/real/path/rootfs
 get_lxc_rootfs() {
+    if [ -z ${1+x} ]; then
+        return 22
+        # invalid argument
+    fi
     # from main(), use this function to test and get an LXC backup object
     #at this point $1=$ROOT from $f1 in main() eg: /btrfs-admin/SanDisk
     #at this point $2="/var/lib/lxc/my-container" from $f2 in main()
@@ -319,6 +371,10 @@ EOF
 #           in a loop to /btrfs-admin/$vol/snapshots/@rootfs/FS_TREE/snap$i
 #         - this works, as long as the correct parent volume is detected.
 lxc_snapshot() {
+    if [ -z ${1+x} ]; then
+        return 22
+        # invalid argument
+    fi
     if [ -n "$containers" ]; then
         unset lxcsnaps
         for i in $containers; do
