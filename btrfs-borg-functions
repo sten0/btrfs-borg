@@ -55,10 +55,11 @@ EOF
     fi
 }
 
-# function: trim leading and trailing whitespace from strings,
+# function: trim leading and trailing whitespace from strings
 # parameter: one string
 # returns: trimmed string
-# used in get_uniq_devs(), and for trimming each field config.csv
+#
+# Used in get_uniq_devs(), and for trimming each field config.csv
 trim_whitespace() {
     local string
     string="$*"
@@ -95,12 +96,13 @@ get_label() {
     fi
 }
 
+# parameter: takes a path to a file or directory
 # returns: boolean
 is_btrfs() {
     if [ "$(stat -f --format=%T $1)" == 'btrfs' ]; then
-        echo "$1 is a btrfs volume"
+        echo "$1 is part of a btrfs volume"
     else
-        echo "$1 is not a btrfs volume"
+        echo "$1 is not part of a btrfs volume"
         false
     fi
 }
@@ -228,6 +230,7 @@ pre_snapshot() {
     cd "$ROOT/$SNAPS_DIR"
     for i in $subs; do
         if [ -d "$i" ]; then
+            local orig_date
             orig_date=$(stat -c %Y "$i")
             # this \/ isn't very nice...
             # make snapshots as btrfs-borg-$i or $i.borg-snap instead
@@ -241,7 +244,6 @@ $i@$AGE"
         sync
     done
 }
-# end pre_snapshot()
 
 # function:
 # parameter: LX container path
