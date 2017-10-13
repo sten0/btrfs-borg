@@ -41,7 +41,10 @@ SNAPS_DIR=snapshots
 # subvolumes will be backed up
 SUBVOL_LIST='auto'
 
-
+# TODO compression knob should go here.
+# Lz4 is truly default post borg-1.1.0.  Can I drop my old extension
+# handling thing whenever lz4/default is used?
+false
 
 # See borg(1) for details
 VERBOSITY='--info --show-rc'

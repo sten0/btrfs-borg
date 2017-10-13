@@ -153,7 +153,8 @@ is_lxc() {
 
 # function: This function ensures that the top-down full-tree view of
 #           a volume is visible to btrfs-borg.  It creates the
-#           required directory structure and mounts the volume[s].
+#           required directory structure, mounts the volume[s], and
+#           creates $SNAPS_DIR
 #
 # parameter: accepts either single labels/devices or a list
 # requires: get_label()
