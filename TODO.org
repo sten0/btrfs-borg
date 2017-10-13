@@ -35,16 +35,16 @@ Insure that any special characters like *,?,(,),!,etc. are treated as literals. 
   - This means using btrfs sub list to automatically find them
   - If an absolute path is given, then check to see if it's an LXC and if it is a container, then run lxc-stop and lxc-snapshot
 ** Related to the comma separated list and --prefix:
-- maybe I should do it as follows...
-  1) automatically prefix hostname
-     1) comma separated list for "backup unit" which becomes a particular "borg archive"
-     2) The backup unit must have the following elements:
-  2) ROOT volume
-  3) Directory: check to see if it's a btrfs subvol, otherwise make it an "OTHERS"
-  4) This SIMPLIFIES things for the user, because he/she no longer has to worry about SRC data types! ;-)
-- Pruning needs to be adapted to operate on these new backup
-  1) Iterate through all of the backup units
-  2) Accept a backup unit as the sole command line argument?
+maybe I should do it as follows...
+1) automatically prefix hostname
+2) comma separated list for "backup unit" which becomes a particular "borg archive"
+3) The backup unit must have the following elements:
+   1) ROOT volume
+   2) Directory: check to see if it's a btrfs subvol, otherwise make it an "OTHERS"
+      - This SIMPLIFIES things for the user, because he/she no longer has to worry about SRC data types! ;-)
+4) Pruning needs to be adapted to operate on these new backup
+5) Iterate through all of the backup units
+6) Accept a backup unit as the sole command line argument?
 **** This idea enables multiple ageing tiers for backups, and multiple   btrfs volumes.  This functionality might come later...but it will   immediately allow the sysadmin to recover hard drive space by "early retirement" of a backup unit that does not require as fine grained  history as another backup unit.  eg: @work-in-progress needs to  always have an up-to-date backup, and X days of backups, but   probably does not need months or years...it just takes up extra   space, and @work-portfolio is what is important in the long-term.
 - eg: BACKUP-UNIT="/btrfs-admin/Red,@home var/lib/lxc/my_container"
   - test for data type with "btrfs sub show $ROOT/$SUBVOL" and check
@@ -58,7 +58,7 @@ Insure that any special characters like *,?,(,),!,etc. are treated as literals. 
   deduplication of user data from host A is attempted against user
   data from host B.
 ***** Or should "backup units" include target disk?
-- eg: BACKUP-UNIT="/Red,@home var/lib/lxc/my_container,[user@host:]/dest/mountpoint,[user@host:]/borg/repo"
+eg: BACKUP-UNIT="/Red,@home var/lib/lxc/my_container,[user@host:]/dest/mountpoint,[user@host:]/borg/repo"
 ** Support backing up LX containers with wildcards?
 eg: find the rootfs of all /var/lib/lxc/* /home/webdev0/* /home/webdev1/*
 1. get basename for each container
