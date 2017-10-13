@@ -44,7 +44,8 @@ EOF
                     cat <<EOF
 Btrfs-borg will terminate now, due to unsafe permissions in $ADMIN_DIR.
 EOF
-                    exit 1
+                    exit 13
+                    # permission denied
                     ;;
                 * )
                     echo -n "Please answer yes or no.  "

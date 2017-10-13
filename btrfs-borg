@@ -61,7 +61,8 @@ deletion should be avoided for the foreseeable future.
 Btrfs-borg will terminate now.
 
 EOF
-    exit 1
+    exit 13
+    # permission denied
 fi
 # Check for requirements
 for c in cut install btrfs borg stat; do
@@ -69,13 +70,15 @@ for c in cut install btrfs borg stat; do
     if [ $? -ne 0 ]; then
         echo "Required dependency $c not found."
         echo "Btrfs-borg will terminate now, because $c is needed"
-        exit 1
+        exit 111
+        # try again
     fi
 done
 if [ $(echo -n $BASH_VERSION | cut -d. -f1) -lt 4 ]; then
     echo "Found bash version $BASH_VERSION."
     echo "Btrfs-borg will terminate now, because >=4 is needed."
-    exit 1
+    exit 25
+    # not a typewriter
 fi
 
 echo "Make this file pull btrfs-borg-functions from the right location at install time"
