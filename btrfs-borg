@@ -30,7 +30,7 @@ if [ $CONFIG_VERSION -ne ${btrfs-borg-version%.*} ]; then
     echo "Version mismatch"
     echo "btrfs-borg version $VERSION"
     echo "config version $CONFIG_VERSION"
-    exit 3
+    exit 1
 else
     echo "Using config version $CONFIG_VERSION"
 fi
@@ -38,7 +38,7 @@ fi
 echo "CONFIGURE CSV VERSION CHECK"
 exit 1
 if [ $CSV_VERSION -ne ${btrfs-borg-version%.*} ]; then
-    exit 3
+    exit 1
 fi
 
 # Sanity checks
@@ -70,15 +70,15 @@ for c in cut install btrfs borg stat; do
     if [ $? -ne 0 ]; then
         echo "Required dependency $c not found."
         echo "Btrfs-borg will terminate now, because $c is needed"
-        exit 111
-        # try again
+        exit 79
+        # cannot access a needed shared library...seems anachronistic
     fi
 done
 if [ $(echo -n $BASH_VERSION | cut -d. -f1) -lt 4 ]; then
     echo "Found bash version $BASH_VERSION."
     echo "Btrfs-borg will terminate now, because >=4 is needed."
-    exit 25
-    # not a typewriter
+    exit 79
+    # cannot access a needed shared library...seems anachronistic
 fi
 
 echo "Make this file pull btrfs-borg-functions from the right location at install time"

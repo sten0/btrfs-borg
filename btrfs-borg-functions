@@ -189,7 +189,7 @@ $1/config not found!
 Is your backup target disk plugged in and mounted?
 Did you initialise the borg repository?
 EOF
-            exit 102
+            return 2
             # no such file or directory
         fi
     else
@@ -206,10 +206,10 @@ $1/config not found!
 Is your backup target disk plugged in and mounted?
 Did you initialise the borg repository?
 EOF
+                return 14
+                # bad address
             fi
             echo "Configuration found for $repo"
-            return 14
-            # bad address
         fi
     fi
 }
