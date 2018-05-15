@@ -1,0 +1,79 @@
+# will this be necessary?  I read that running shell code in Python
+# happens without the benefit of $PATH...eg: full paths to executables
+# are required.
+
+executable_paths:
+  btrfs: /sbin/btrfs
+
+# skip down to default unit example for the most clear and precise config
+# ALL TOP-LEVEL KEYS OTHER THAN 'templates' ARE BACKUP UNITS
+templates:
+  my_template:
+    configure: stuff
+    here: true
+  my_other_template:
+    configure: other stuff
+    here: false
+  a_more_real_example:
+    prefix: "$(hostname)"
+    # do the following in a more pythonic way?
+    # better yet, is there a YAML way?
+    postfix: "$(date +%s)"
+
+important_stuff:
+  prefix_name: OS_userdata_LXCs
+  volume_roots: /btrfs-admin/Black
+  source_objects:
+    - This must be somewhere below volume_roots
+  manifests:
+  paths_for_manifests:
+    - This must be somewhere below a source_object
+  borg_repo: /media/usb1/borg_repo
+
+caches_from_old_projects:
+  prefix_name: "hostname_@stuff"
+  volume_roots: /btrfs-admin/Red
+  source_objects:
+  manifests:
+  borg_repo: /media/usb1/borg_repo
+
+containers:
+  prefix_name: System-LXCs
+  volume_roots: /btrfs-admin/Blue
+  source_objects: @my_old_friend
+  LXCs: @stop_this_container_to_quiesce_its_database_snap_it_restart_it_then_backup_snapshot
+  manifests:
+  borg_repo: user@hostname:/raid_array/backups/borg_repo
+
+default_unit_example:
+  prefix_name: "$(hostname)-$(basename $volume_root)-@stuff_@home_container.name-$(date +%s)"
+# This example will fail if subvol @container0 exists in both Red and Black
+  volume_roots:
+    - /btrfs-admin/Red
+    - /btrfs-admin/Black
+  source_objects: [@home, @rootfs, @container0]
+# So this more precise option must also be supported...
+# by default I think I will WARN and then not backup duplicate subvol names
+# or ERROR on duplicate subvol names?
+  volume_roots:
+    /btrfs-admin/Red:
+      source_objects: [@home, @rootfs, @container0]
+    /btrfs-admin/Black:
+      source_objects: [@rootfs, @container0]
+  manifests:
+  borg_repo: /media/usb1/borg_repo
+
+fedora_templated_example:
+  template: a_more_real_example
+  volume_roots: /btrfs-admin
+  source_objects:
+    - home
+    - rootfs
+
+ubuntu_templated_example:
+  template: a_more_real_example
+  volume_roots: /btrfs-admin
+  source_objects:
+    - '@home'
+    - '@'
+  is_equivalent_to_this: [@home, @rootfs]
