@@ -87,6 +87,14 @@ get_uniq_devs() {
     devices=$(findmnt --types btrfs --noheadings --output "SOURCE" --nofsroot \
                       --noheading | sort | uniq | tr '\n' ' ')
     trim_whitespace $devices
+    # /\ I think bash does this automatically!
+    # eg: for a dir with a bunch of 2017-12-24 type dates
+    # foo=`ls | grep -P -o '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]' | sort | uniq`
+    # normally the command outputs each new file on a new line
+    # but for some reason when assigning to a variable the leading whitespace
+    # gets automatically trimmed, and the newlines are changed to spaces
+    # echo -n $foo  > /tmp/garb && echo -n $foo  >> /tmp/garb
+    # /\ proves this
 }
 
 # function: gets volume LABEL if possible and returns it, otherwise
