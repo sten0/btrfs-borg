@@ -1,6 +1,7 @@
 * Short Term
 ** VERY IMPORTANT!
 Insure that any special characters like *,?,(,),!,etc. are treated as literals.  These characters should already be illegal as subvolume names, but because this script is run as root it's better to be extra-safe
+** Use arrays instead of strings wherever possible
 ** Goal: allow separation of configuration from script
 *** use a CSV?
 - ¿ provide example script for populating the CSV ?
@@ -11,7 +12,7 @@ Insure that any special characters like *,?,(,),!,etc. are treated as literals. 
 ** Make manifest support silent and opt-in? Drop it?
 - or wait for a user to file a bug complaining about this ?
 ** Document the /btrfs-admin/label-or-device-subvol=/ convention
-** The snapshot function must be able to autodetect parent volume.
+** The snapshot function must become able to autodetect parent volume.
 - eg: snapshot @rootfs and @home from Blue, and @huge_subvol from Red in the same backup unit
 ** Shift lots of configuration into new btrfs-borg.csv; adapt the script to read from this file; allow the location of this config file to be defined
 - Include example btrfs-borg.csv
@@ -108,6 +109,9 @@ stuff, umask stuff, IFS stuff, etc.
 
 * Medium Term
 ** Document all functions
+** Store the state of a complex backup to a file, so that if btrfs-borg is interrupted it can automatically resume when restarted.  This is better than trapping and cleaning up.
+*** each backup unit has name, type, srcs, etc
+*** as a bonus, this could be used as a coarse progress indicator
 ** Add SSH support (requires borgbackup on server)
 *** Write HOWTO for server-initiated backup?
 + limit available commands for root on $HOST to btrfs-borg?
@@ -138,9 +142,8 @@ stuff, umask stuff, IFS stuff, etc.
   prefix parameter, so that the backups of each host are pruned
   (backups for host) instead of (backups for host1 and host2 and
   etc.)
-** Centralise documentation to an .asciidoc and use this to generate a manpage.
+** Centralise documentation and use this to generate a manpage.
 - Use an acsiidoc or an rst (reStructuredText)
-
 
 * Long Term
 ** When btrfs-borg is feature-complete, tag 1.0
